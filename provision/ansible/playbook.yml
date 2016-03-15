@@ -368,7 +368,8 @@
         - 'key_buffer=16M'
       become: yes
 
-    - service: name=mysql state=restarted
+    - name: "MYSQL | Restart MySQL server."
+      service: name=mysql state=restarted
       become: yes
 
     # Java
@@ -512,7 +513,7 @@
       become: yes
 
     - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
+      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       register: config_file_exist
 
     - name: "CASEBOX | Check casebox MySQL password."
@@ -577,7 +578,6 @@
             state=directory
       when: config_file_exist.stat.exists == False
       become: yes
-
 
     - name: "CASEBOX | Create Casebox Solr links."
       file: src={{ item.src }}
@@ -667,7 +667,7 @@
 
     # Cleanup and restart services
     - name: "NGINX | Restart Nginx webserver."
-      service: name=nginx state=restarted
+      shell: "service nginx restart"
       become: yes
 
     - name: "MYSQL | Restart MySQL server."
