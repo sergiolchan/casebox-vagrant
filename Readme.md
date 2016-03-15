@@ -1,6 +1,12 @@
 Casebox2
 ========
 
+Branches
+--------
+
+* v1 - Casebox v1 installation script (Vagrant, Ansible, LAMP5).
+* v2 - Casebox v2 installation script (Vagrant, Ansible, LEMP7).
+
 Installation
 ------------
 
@@ -10,9 +16,9 @@ Download and install:
 * Vagrant (https://www.vagrantup.com/)
 * Git (https://git-scm.com/)
 
-Clone Casebox2 Ansible installation script (https://bitbucket.org/caseboxdev/casebox2vagrant.git)
+Clone Casebox v1|v2 ansible installation script (https://github.com/KETSE/casebox-vagrant.git)
 
-Navigate to ```/path/to/casebox2vagrant``` directory.
+Navigate to ```/path/to/casebox``` directory.
 
 Run vagrant (virtualbox) machine: ```vagrant up```
 
@@ -32,7 +38,8 @@ Vagrant box host/ip: 192.168.33.3.xip.io / 192.168.33.3
 Links
 -----
 
-Casebox instance: [http://192.168.33.3.xip.io/c/default](http://192.168.33.3.xip.io/c/default)
+Casebox v1 instance: [http://192.168.33.3.xip.io/default](http://192.168.33.3.xip.io/default)
+Casebox v2 instance: [http://192.168.33.3.xip.io/c/default](http://192.168.33.3.xip.io/c/default)
 
 Solr admin interface: [http://192.168.33.3.xip.io:8983/solr/#/](http://192.168.33.3.xip.io:8983/solr/#/)
 
@@ -68,4 +75,3 @@ Issuses
     Fix: Run 'apt-get install nfs-kernel-server' command. (https://help.ubuntu.com/community/SettingUpNFSHowTo)
     
     OS: Gnu/Linux
-
