@@ -39,6 +39,7 @@ Links
 -----
 
 Casebox v1 instance: [http://192.168.33.3.xip.io/default](http://192.168.33.3.xip.io/default)
+
 Casebox v2 instance: [http://192.168.33.3.xip.io/c/default](http://192.168.33.3.xip.io/c/default)
 
 Solr admin interface: [http://192.168.33.3.xip.io:8983/solr/#/](http://192.168.33.3.xip.io:8983/solr/#/)
