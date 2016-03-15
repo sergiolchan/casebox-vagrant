@@ -1,0 +1,36 @@
+#
+# file: casebox/tasks/cb_solr.yml
+# Add/update Solr indexes
+#
+---
+
+- name: Check casebox config file
+  stat: path="{{ casebox_htdocs_dir }}/config.ini"
+  register: config_file_exist
+
+- name: Creates Solr configsets directory
+  file: path=/var/solr/data/configsets
+        state=directory
+        recurse=yes
+        group=solr
+        owner=solr
+  become: yes
+  when: config_file_exist.stat.exists == False
+
+- name: Create Casebox Solr links
+  file: src={{ item.src }}
+        dest={{ item.dest }}
+        state=link
+        group=solr
+        owner=solr
+  become: yes
+  with_items: "{{ casebox_solr_links }}"
+  when: config_file_exist.stat.exists == False
+
+- name: Index Solr casebox index
+  shell: "{{ casebox_solr_cb_index }}"
+  become: yes
+
+- name: Index Solr casebox logs
+  shell: "{{ casebox_solr_log_index }}"
+  become: yes

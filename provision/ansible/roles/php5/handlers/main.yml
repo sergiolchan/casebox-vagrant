@@ -1,0 +1,9 @@
+#
+# file: php5/handlers/mail.yml
+# PHP5 related handlers
+#
+---
+
+- name: restart apache2
+  service: name=apache2 state=restarted
+  become: yes

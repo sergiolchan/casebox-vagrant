@@ -1,0 +1,21 @@
+#
+# file: casebox.local.yml
+# Deploy Casebox
+# @link https://www.casebox.org/
+#
+---
+
+- hosts: "{{ host }}"
+  vars:
+    - host: localhost
+  roles:
+    - sysctl
+    - swap
+    - common
+    - redis
+    - apache2
+    - php5
+    - mysql
+    - java
+    - solr
+    - casebox

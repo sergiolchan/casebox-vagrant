@@ -1,0 +1,8 @@
+#
+# file: sysctl/tasks/mail.yml
+# Manage default system settings
+#
+---
+
+- include: "ipv4.yml"
+- include: "ipv6.yml"

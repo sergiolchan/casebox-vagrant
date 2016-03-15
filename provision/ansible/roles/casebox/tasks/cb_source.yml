@@ -1,0 +1,24 @@
+#
+# file: casebox/tasks/cb_source.yml
+# Download and install casebox source files
+#
+---
+
+- name: Check casebox directory
+  stat: path={{ casebox_root_dir }}
+  become: yes
+  register: casebox_dir
+
+- name: Create casebox directory
+  file: path={{ casebox_root_dir }}
+        state=directory
+        mode=0755
+  become: yes
+  when: casebox_dir.stat.exists == False
+
+- name: Clone casebox
+  git: repo={{ casebox_git_url }}
+       dest={{ casebox_root_dir }}
+       version={{ casebox_git_branch }}
+  become: yes
+  when: casebox_dir.stat.exists == False

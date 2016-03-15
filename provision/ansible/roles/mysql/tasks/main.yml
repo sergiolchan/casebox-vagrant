@@ -1,0 +1,61 @@
+#
+# file: mysql/tasks/main.yml
+# Install mysql related packages
+#
+---
+
+- name: Update apt cache
+  shell: "apt-get update --fix-missing"
+  become: yes
+
+- name: Install python packages
+  apt: pkg={{ item }}
+       force=yes
+       update_cache=yes
+       state=present
+  with_items:
+    - python-pycurl
+    - python-mysqldb
+  become: yes
+
+- name: Install MySQL packages
+  apt: pkg={{ item }}
+       force=yes
+       update_cache=yes
+       state=present
+  with_items:
+    - mysql-common
+    - mysql-client
+    - mysql-server
+  become: yes
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Check MySQL root password
+  stat: path={{ root_db_pass_file }}
+  become: yes
+  register: root_db_pass_file_exist
+
+- name: Generate MySQL root password
+  lineinfile: dest="{{ root_db_pass_file }}"
+              line="{{ lookup('pipe', 'openssl rand -hex 10') }}"
+              create=yes
+              state=present
+  when: root_db_pass_file_exist.stat.exists == False
+  become: yes
+
+- name: Fetch mysql root password
+  shell: "cat {{ root_db_pass_file }}"
+  become: yes
+  register: mysq_root_password
+
+- name: Update mysql root password for all root accounts
+  become: yes
+  mysql_user: name=root
+              host={{ item }}
+              password={{ mysq_root_password.stdout }}
+  with_items:
+    - 127.0.0.1
+    - ::1
+    - localhost
+  when: root_db_pass_file_exist.stat.exists == False

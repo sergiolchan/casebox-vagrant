@@ -1,0 +1,33 @@
+#
+# file: php5/tasks/main.yml
+# Install php5 related packages
+#
+---
+
+- name: Install php5 packages
+  apt: pkg={{item}}
+       force=yes
+       update_cache=yes
+       state=present
+  become: yes
+  with_items:
+    - php5
+    - php5-mcrypt
+    - php5-mysqlnd
+    - php5-dev
+    - php5-gd
+    - imagemagick
+    - php5-imagick
+    - libapache2-mod-php5
+
+- name: Check Apache2 status
+  service: name=apache2 enabled=yes
+  become: yes
+  register: apache2_status
+
+- name: Enable php5 imagick
+  shell: "php5enmod imagick"
+  become: yes
+  when: apache2_status.enabled == True
+  notify:
+    - restart apache2

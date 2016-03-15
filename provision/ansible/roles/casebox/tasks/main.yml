@@ -1,0 +1,12 @@
+#
+# file: casebox/tasks/main.yml
+# Install/Update casebox environment
+#
+---
+
+- include: cb_source.yml
+- include: cb_vhost.yml
+- include: cb_database.yml
+- include: cb_solr.yml
+- include: cb_setup.yml
+- include: cb_results.yml

@@ -1,0 +1,15 @@
+#
+# file: java/tasks/main.yml
+# Install JAVA7 JDK and JRE
+#
+---
+
+- name: Install java
+  apt: pkg={{item}}
+       force=yes
+       update_cache=yes
+       state=present
+  become: yes
+  with_items:
+    - openjdk-7-jre
+    - openjdk-7-jdk

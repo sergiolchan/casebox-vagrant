@@ -1,0 +1,26 @@
+#
+# file: casebox/tasks/cb_results.yml
+# Display results
+#
+---
+
+- name: Check information
+  stat: path="~/.{{ casebox_core }}.casebox.info"
+  register: information_file
+
+- name: Fetch information
+  template: src=information.j2
+            dest="~/.{{ casebox_core }}.casebox.info"
+  when: information_file.stat.exists == False
+
+- name: Check information
+  stat: path="~/.{{ casebox_core }}.casebox.info"
+  register: information_file
+
+- name: Information
+  shell: "cat ~/.{{ casebox_core }}.casebox.info"
+  register: output
+  when: information_file.stat.exists == True
+
+- debug: var=output.stdout_lines
+  when: information_file.stat.exists == True

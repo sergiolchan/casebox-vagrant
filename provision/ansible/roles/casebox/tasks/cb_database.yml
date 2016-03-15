@@ -1,0 +1,72 @@
+#
+# file: casebox/tasks/cb_database.yml
+# Create casebox databases
+#
+---
+
+- name: Check casebox config file
+  stat: path="{{ casebox_htdocs_dir }}/config.ini"
+  register: config_file_exist
+
+- name: Check casebox MySQL password
+  stat: path={{ casebox_db_pass_file }}
+  register: db_pass_file_exist
+
+- name: Generate casebox password
+  lineinfile: dest="{{ casebox_db_pass_file }}"
+              line="{{ lookup('pipe', 'openssl rand -hex 10') }}"
+              create=yes
+              state=present
+  when: db_pass_file_exist.stat.exists == False and config_file_exist.stat.exists == False
+
+- name: Fetch mysql casebox password
+  shell: "cat {{ casebox_db_pass_file }}"
+  register: mysql_casebox_password
+  when: config_file_exist.stat.exists == False
+
+- name: Fetch mysql root password
+  shell: "cat {{ root_db_pass_file }}"
+  become: yes
+  register: mysq_root_password
+  when: config_file_exist.stat.exists == False
+
+- name: Create databases
+  mysql_db: name={{ item.db }}
+            login_user=root
+            login_password={{ mysq_root_password.stdout }}
+            state=present
+  with_items: "{{ casebox_db_names }}"
+  when: config_file_exist.stat.exists == False
+
+- name: Grant user permissions
+  mysql_user: name={{ casebox_db_user }}
+              host={{ item[0] }}
+              priv={{ item[1].db }}.*:ALL
+              append_privs=yes
+              password={{ mysql_casebox_password.stdout }}
+              login_user=root
+              login_password={{ mysq_root_password.stdout }}
+              state=present
+  with_nested:
+    - "{{ casebox_db_hosts }}"
+    - "{{ casebox_db_names }}"
+  when: config_file_exist.stat.exists == False
+
+- name: Import databases
+  mysql_db: name={{ item.db }}
+            login_user=root
+            login_password={{ mysq_root_password.stdout }}
+            state=import
+            target={{ item.file }}
+  with_items: "{{ casebox_db_names }}"
+  when: config_file_exist.stat.exists == False
+
+- name: Update mysql configuration file
+  template: src=my.cnf.j2
+            dest=/etc/mysql/my.cnf
+            owner=root
+            group=root
+            mode=0600
+  become: yes
+  notify:
+    - restart mysql

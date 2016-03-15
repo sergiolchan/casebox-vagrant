@@ -1,0 +1,23 @@
+#
+# file: solr/tasks/main.yml
+# Install Apache Solr packages
+#
+---
+
+- name: Check Apache Solr status
+  stat: path=/etc/init.d/solr
+  register: solr_service_status
+  become: yes
+
+- name: Download Apache Solr
+  shell: "cd /tmp; wget {{ solr_url }}"
+  when: solr_service_status.stat.exists == False
+
+- name: Extract Apache Solr
+  shell: "cd /tmp; tar xzf {{ solr_ver }}.tgz {{ solr_ver }}/bin/install_solr_service.sh --strip-components=2"
+  when: solr_service_status.stat.exists == False
+
+- name: Install Apache Solr
+  shell: "cd /tmp ; ./install_solr_service.sh {{ solr_ver }}.tgz"
+  when: solr_service_status.stat.exists == False
+  become: yes

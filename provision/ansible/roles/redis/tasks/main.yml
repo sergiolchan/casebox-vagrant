@@ -1,0 +1,11 @@
+#
+# file: redis/tasks/main.yml
+# Install resid packages.
+#
+---
+
+- name: Install redis server
+  apt: name={{ item }} state=present
+  become: yes
+  with_items:
+    - redis-server

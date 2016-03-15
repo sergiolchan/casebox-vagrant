@@ -1,0 +1,11 @@
+#
+# file: casebox/tasks/cb_vhost.yml
+# Add Casebox Apache2 virtual host
+#
+---
+
+- name: Add default vhost
+  template: src=000-default.conf dest=/etc/apache2/sites-available/
+  become: yes
+  notify:
+    - restart apache2

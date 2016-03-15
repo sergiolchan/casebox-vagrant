@@ -1,0 +1,12 @@
+#
+# file: sysctl/tasks/ipv4.yml
+# Manage network settings
+#
+---
+
+- name:  Set ipv4 forwarding
+  sysctl: name="net.ipv4.ip_forward"
+          value=1
+          sysctl_set=yes
+          state=present
+  become: yes

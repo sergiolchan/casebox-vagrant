@@ -1,0 +1,60 @@
+#
+# file: casebox/tasks/cb_setup.yml
+# Setup casebox
+#
+---
+
+- name: Check casebox config file
+  stat: path="{{ casebox_htdocs_dir }}/config.ini"
+  register: config_file_exist
+
+- name: Check casebox MySQL password
+  stat: path={{ casebox_db_pass_file }}
+  register: db_pass_file_exist
+
+- name: Fetch casebox MySQL password
+  shell: "cat {{ casebox_db_pass_file }}"
+  register: mysql_casebox_password
+  when: db_pass_file_exist.stat.exists == True
+
+- name: Creates tmp config.ini
+  template: src=config.ini
+            dest="/tmp/config.ini"
+  when: config_file_exist.stat.exists == False
+
+- name: Create default config file
+  file: path="{{ casebox_htdocs_dir }}/config.ini"
+        state=touch
+  become: yes
+  when: config_file_exist.stat.exists == False
+
+- name: Install Casebox default core
+  shell: "php {{ casebox_root_dir }}bin/install.php --config=/tmp/config.ini"
+  become: yes
+  when: config_file_exist.stat.exists == False
+
+- name: Index Casebox default core
+  shell: "php {{ casebox_root_dir }}bin/solr_reindex_core.php -c {{ casebox_core }} -a -l"
+  become: yes
+  when: config_file_exist.stat.exists == False
+
+- name: Creates Casebox backup directory
+  file: path="{{ casebox_backup_dir }}"
+        state=directory
+        mode=0777
+        recurse=yes
+  become: yes
+  when: config_file_exist.stat.exists == False
+
+#- name: Set casebox directory permissions
+#  file: dest={{ casebox_root_dir }} state=directory
+#        owner={{ apache_user }}
+#        group={{ apache_user }}
+#        mode=0775
+#        recurse=yes
+#  become: yes
+#  when: config_file_exist.stat.exists == False
+
+#- name: Cleanup
+#  file: path="/tmp/config.ini" state=absent
+#  when: config_file_exist.stat.exists == False

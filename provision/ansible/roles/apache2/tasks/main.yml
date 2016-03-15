@@ -1,0 +1,59 @@
+#
+# file: apache2/tasks/main.yml
+# Install Apache2 related packages
+#
+---
+
+- name: Install Apache2
+  apt: pkg={{ item }} update_cache=yes state=present
+  become: yes
+  with_items:
+    - apache2
+
+- name: Check Apache2 status
+  service: name=apache2 enabled=yes
+  register: apache2_status
+  become: yes
+
+- name: Enable Apache2 mod rewrite
+  shell: "a2enmod rewrite"
+  become: yes
+  when: apache2_status.enabled == True
+  notify:
+    - restart apache2
+
+- name: Enable Apache2 mod headers
+  shell: "a2enmod headers"
+  become: yes
+  when: apache2_status.enabled == True
+  notify:
+    - restart apache2
+
+- name: Enable Apache2 mod ssl
+  shell: "a2enmod ssl"
+  become: yes
+  when: apache2_status.enabled == True
+  notify:
+    - restart apache2
+
+- name: Check fqdn.conf file
+  stat: path={{ apache_fqdn_file }}
+  become: yes
+  register: fqdn_file
+
+- name: Add fqdn.conf
+  shell: "echo 'ServerName localhost' | tee {{ apache_fqdn_file }}"
+  become: yes
+  when: apache2_status.enabled == True and fqdn_file.stat.exists == False
+
+- name: Check fqdn.conf file
+  stat: path={{ apache_fqdn_file }}
+  become: yes
+  register: fqdn_file
+
+- name: Enable Apache2 fqdn configuration
+  shell: "a2enconf fqdn"
+  become: yes
+  when: fqdn_file.stat.exists == True
+  notify:
+    - restart apache2

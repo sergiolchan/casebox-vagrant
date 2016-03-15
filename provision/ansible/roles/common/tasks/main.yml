@@ -1,0 +1,20 @@
+#
+# file: common/tasks/main.yml
+# Install common software.
+#
+---
+
+- name: Update apt cache
+  shell: "apt-get update --fix-missing"
+  become: yes
+
+- name: Install common software
+  apt: name={{ item }} state=present
+  become: yes
+  with_items:
+    - git
+    - wget
+    - mc
+    - curl
+    - nano
+    - sendmail

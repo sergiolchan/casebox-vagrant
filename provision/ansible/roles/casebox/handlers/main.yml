@@ -1,0 +1,13 @@
+#
+# file: casebox/handlers/mail.yml
+# Casebox related handlers
+#
+---
+
+- name: restart apache2
+  service: name=apache2 state=restarted
+  become: yes
+
+- name: restart mysql
+  service: name=mysql state=restarted
+  become: yes

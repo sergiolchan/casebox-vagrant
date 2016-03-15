@@ -1,0 +1,9 @@
+#
+# file: apache2/handlers/mail.yml
+# Apache2 related handlers
+#
+---
+
+- name: restart apache2
+  service: name=apache2 state=restarted
+  become: yes

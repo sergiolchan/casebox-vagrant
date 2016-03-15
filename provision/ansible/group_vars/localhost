@@ -1,0 +1,62 @@
+#
+# Local host deployment variables
+#
+
+# Provisions
+provision_dir: /var/www/provision
+
+
+# Host
+host: localhost
+
+
+# Swap
+swapsize: 512
+swapfile: extraswap
+
+
+# Apache2
+apache_fqdn_file: /etc/apache2/conf-available/fqdn.conf
+apache_user: www-data
+
+
+# MySQL
+root_db_pass_file: /root/.mysql.password
+
+
+# Solr
+solr_url: "http://ftp.heanet.ie/mirrors/www.apache.org/dist/lucene/solr/5.3.1/solr-5.3.1.tgz"
+solr_ver: "solr-5.3.1"
+
+
+# Casebox
+casebox_server_name: http://192.168.33.11/
+casebox_root_dir: /var/www/html/casebox/
+
+casebox_htdocs_dir: /var/www/html/casebox/httpsdocs
+
+casebox_git_url: https://github.com/KETSE/casebox.git
+casebox_git_branch: devel
+
+casebox_core: casebox
+
+casebox_db_user: casebox
+casebox_db_pass_file: ~/.mysql.{{ casebox_core }}.password
+casebox_db_names:
+  - { db: "cb__casebox", file: '/var/www/html/casebox/install/mysql/_casebox.sql'}
+  - { db: "cb_{{ casebox_core }}", file: '/var/www/html/casebox/install/mysql/bare_bone_core.sql'}
+casebox_db_hosts:
+  - 127.0.0.1
+  - localhost
+
+casebox_solr_links:
+  - { src: '/var/www/html/casebox/sys/solr_configsets/default_config', dest: '/var/solr/data/configsets/cb_default'}
+  - { src: '/var/www/html/casebox/sys/solr_configsets/log_config', dest: '/var/solr/data/configsets/cb_log'}
+casebox_solr_cb_index: "curl http://127.0.0.1:8983/solr/admin/cores?action=CREATE'&'name=cb_{{ casebox_core }}'&'configSet=cb_default"
+casebox_solr_log_index: "curl http://127.0.0.1:8983/solr/admin/cores?action=CREATE'&'name=cb_log'&'configSet=cb_default"
+
+casebox_backup_dir: /var/www/html/casebox/backup/
+
+casebox_default_email: admin@example.com
+casebox_default_passw_path: "~/.{{ casebox_core }}.password chars=ascii_letters"
+casebox_default_passw: "{{ lookup('password', 'casebox_default_passw_path') }}"

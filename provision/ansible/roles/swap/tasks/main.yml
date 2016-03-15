@@ -1,0 +1,40 @@
+#
+# file: swap/tasks/main.yml
+# Install swap partition
+#
+---
+
+- name: Check if swap exists
+  command: swapon -s | grep {{ swapfile }}
+  become: yes
+  register: swap_check
+
+- name: Disable swap file
+  command: swapoff /{{ swapfile }}
+  become: yes
+  when: swap_check.stdout.find('{{ swapfile }}') > -1
+
+- name: Remove swap file
+  command: rm /{{ swapfile }}
+  become: yes
+  when: swap_check.stdout.find('{{ swapfile }}') > -1
+
+- name: Create swap space
+  become: yes
+  command: dd if=/dev/zero of=/{{ swapfile }} bs=1M count={{ swapsize }}
+
+- name: Make swap
+  become: yes
+  command: mkswap /{{ swapfile }}
+
+- name: Add to fstab
+  become: yes
+  action: lineinfile dest=/etc/fstab regexp="{{ swapfile }}" line="/{{ swapfile }} none swap sw 0 0" state=present
+
+- name: Turn swap on
+  become: yes
+  command: swapon -a
+
+- name: Set swapiness
+  become: yes
+  command: echo 0 | sudo tee /proc/sys/vm/swappiness
