@@ -672,9 +672,11 @@
 
     - name: "CASEBOX | Solr create Casebox default core."
       shell: "{{ casebox_root_dir }}bin/console casebox:solr:create --env={{ casebox_core }}"
+      ignore_errors: yes
 
     - name: "CASEBOX | Solr index Casebox default core."
       shell: "{{ casebox_root_dir }}bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
+      ignore_errors: yes
 
     - name: "CASEBOX | Clear cache."
       shell: "{{ casebox_root_dir }}bin/console ca:cl --env={{ casebox_core }}"
