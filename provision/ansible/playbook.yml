@@ -98,15 +98,15 @@
     - casebox_solr_host: '127.0.0.1'
     - casebox_solr_port: '8983'
 
+    - casebox_solr_username: ''
+    - casebox_solr_password: ''
+
     - casebox_solr_links:
-      - { src: '{{ casebox_root_dir }}var/solr/default', dest: '/var/solr/data/configsets/cb_default'}
-      - { src: '{{ casebox_root_dir }}var/solr/log', dest: '/var/solr/data/configsets/cb_log'}
+      - { src: '{{ casebox_root_dir }}var/solr/default', dest: '/var/solr/data/configsets/casebox'}
+      - { src: '{{ casebox_root_dir }}var/solr/log', dest: '/var/solr/data/configsets/casebox_log'}
 
     - casebox_default_passw_path: '~/.casebox.password chars=ascii_letters'
     - casebox_default_passw: "{{ lookup('password', 'casebox_default_passw_path') }}"
-
-    - casebox_solr_cb_index: "curl http://127.0.0.1:8983/solr/admin/cores?action=CREATE'&'name={{ casebox_core }}'&'configSet=cb_default"
-    - casebox_solr_log_index: "curl http://127.0.0.1:8983/solr/admin/cores?action=CREATE'&'name={{ casebox_core }}_log'&'configSet=cb_log"
 
     # Nginx
     - nginx_sites:
@@ -589,16 +589,8 @@
       when: config_file_exist.stat.exists == False
       become: yes
 
-    - name: "CASEBOX | Index Solr casebox index."
-      shell: "{{ casebox_solr_cb_index }}"
-      become: yes
-
-    - name: "CASEBOX | Index Solr casebox logs."
-      shell: "{{ casebox_solr_log_index }}"
-      become: yes
-
     - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
+      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       register: config_file_exist
 
     - name: "CASEBOX | Check casebox MySQL password."
@@ -610,8 +602,23 @@
       register: mysql_casebox_password
       when: db_pass_file_exist.stat.exists == True
 
+    - name: "CASEBOX | Check casebox config file."
+      stat: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+      register: stat_config_file
+
+    - name: "CASEBOX | Casebox core config."
+      lineinfile: dest="{{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
+                  line="{{ item }}"
+                  create=yes
+      become: yes
+      with_items:
+        - 'imports:'
+        - "    - { resource: {{ casebox_core }}/parameters.yml }"
+        - '    - { resource: config.yml }'
+      when: stat_config_file.stat.exists == False
+
     - name: "CASEBOX | Casebox parameters."
-      lineinfile: dest="{{ casebox_root_dir }}app/config/default/parameters.yml"
+      lineinfile: dest="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
                   line="{{ item }}"
                   create=yes
       with_items:
@@ -629,8 +636,8 @@
         - "    solr_port: {{ casebox_solr_port }}"
         - "    solr_core: {{ casebox_core }}"
         - "    solr_core_log: {{ casebox_core }}_log"
-        - '    solr_username: null'
-        - '    solr_password: null'
+        - "    solr_username: {{ casebox_solr_username }}"
+        - "    solr_password: {{ casebox_solr_password }}"
         - '    session.lifetime: 4320'
         - '    admin_email: admin@example.com'
         - '    sender_email: emails.sender@example.com'
@@ -650,20 +657,33 @@
       when: config_file_exist.stat.exists == False
       become: yes
 
+    - name: "CASEBOX | Check casebox default parameters file."
+      stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
+      register: stat_default_parameters_file
+
+    - name: "CASEBOX | Populate default parameters file."
+      copy: src="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
+            dest="{{ casebox_root_dir }}app/config/default/parameters.yml"
+      when: stat_default_parameters_file.stat.exists == False
+      become: yes
+
     - name: "CASEBOX | Composer update."
       shell: "composer update --working-dir={{ casebox_root_dir }}"
 
-    - name: "CASEBOX | Index Casebox default core."
-      shell: "{{ casebox_root_dir }}bin/console casebox:solr:update --all=true --env=default"
+    - name: "CASEBOX | Solr create Casebox default core."
+      shell: "{{ casebox_root_dir }}bin/console casebox:solr:create --env={{ casebox_core }}"
+
+    - name: "CASEBOX | Solr index Casebox default core."
+      shell: "{{ casebox_root_dir }}bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
 
     - name: "CASEBOX | Clear cache."
-      shell: "{{ casebox_root_dir }}bin/console ca:cl --env=default"
+      shell: "{{ casebox_root_dir }}bin/console ca:cl --env={{ casebox_core }}"
 
     - name: "CASEBOX | Update Casebox database schema."
       shell: "{{ casebox_root_dir }}bin/console doctrine:schema:update --force"
 
     - name: "CASEBOX | Add Casebox assests."
-      shell: "{{ casebox_root_dir }}bin/console casebox:min:assets --env=default"
+      shell: "{{ casebox_root_dir }}bin/console casebox:min:assets --env={{ casebox_core }}"
 
     # Cleanup and restart services
     - name: "NGINX | Restart Nginx webserver."
