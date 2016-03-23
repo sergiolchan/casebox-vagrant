@@ -36,8 +36,6 @@
         - 'openjdk-7-jre'
         - 'openjdk-7-jdk'
 
-
-
     # PHP
     - php_packages:
         - 'php7.0-cli'
@@ -87,6 +85,7 @@
 
     - casebox_db_names:
       - { db: '{{ casebox_core }}', file: '{{ casebox_root_dir }}var/backup/cb_default.sql'}
+      - { db: 'cbtest', file: '{{ casebox_root_dir }}var/backup/cb_default.sql'}
 
     - casebox_db_hosts:
         - '127.0.0.1'
@@ -110,6 +109,7 @@
 
     # Nginx
     - nginx_sites:
+      - { src: '/etc/nginx/sites-available/http_cbtest.conf', dest: '/etc/nginx/sites-enabled/http_cbtest.conf' }
       - { src: '/etc/nginx/sites-available/http_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/http_{{ casebox_core }}.conf' }
       - { src: '/etc/nginx/sites-available/https_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/https_{{ casebox_core }}.conf' }
 
@@ -140,6 +140,41 @@
 
     - name: "NGINX | Remove Nginx default virtual host."
       file: path=/etc/nginx/sites-enabled/default state=absent
+      become: yes
+
+    - name: "NGINX | Remove cbtest http virtual host."
+      file: path="/etc/nginx/sites-available/http_cbtest.conf" state=absent
+      become: yes
+
+    - name: "NGINX | Add http virtual host."
+      lineinfile: dest="/etc/nginx/sites-available/http_cbtest.conf"
+                  line="{{ item }}"
+                  create=yes
+                  state=present
+                  insertafter=EOF
+      with_items:
+        - "server {"
+        - "    listen 80;\n"
+        - "    server_name {{ casebox_server_name }};"
+        - "    root {{ casebox_htdocs_dir }};"
+        - "    rewrite ^/index\\.php/?(.*)$ /$1 permanent;\n"
+        - "    location / {"
+        - "        index index.php;"
+        - "        try_files $uri @rewriteapp;"
+        - "    }\n"
+        - "    location @rewriteapp { "
+        - "        rewrite ^(.*)$ /index.php/$1 last;"
+        - "    }\n"
+        - "    location ~ ^/(index)\\.php(/|$) {"
+        - "        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;"
+        - "        fastcgi_split_path_info ^(.+\\.php)(/.*)$;"
+        - "        include fastcgi_params;"
+        - "        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;"
+        - "        fastcgi_param  HTTPS off;"
+        - "    }\n"
+        - "    error_log /var/log/nginx/http_{{ casebox_core }}.error.log;"
+        - "    access_log /var/log/nginx/http_{{ casebox_core }}.access.log;"
+        - "}\n"
       become: yes
 
     - name: "NGINX | Remove Casebox http virtual host."
@@ -667,6 +702,71 @@
       when: stat_default_parameters_file.stat.exists == False
       become: yes
 
+    # Test environment
+    - name: "CASEBOX | Casebox test config."
+      file: path="{{ casebox_root_dir }}/app/config/config_cbtest.yml" state=absent
+      become: yes
+
+    - name: "CASEBOX | Casebox test config."
+      lineinfile: dest="{{ casebox_root_dir }}/app/config/config_cbtest.yml"
+                  line="{{ item }}"
+                  create=yes
+      become: yes
+      with_items:
+        - 'imports:'
+        - "    - { resource: cbtest/parameters.yml }"
+        - '    - { resource: config.yml }'
+
+    - name: "CASEBOX | Check casebox test parameters file."
+      stat: path="{{ casebox_root_dir }}app/config/cbtest/parameters.yml"
+      register: stat_cbtest_parameters_file
+
+    - name: "CASEBOX | Create cbtest directory."
+      file: path="{{ casebox_root_dir }}app/config/cbtest"
+            state=directory
+            recurse=yes
+      when: stat_cbtest_parameters_file.stat.exists == False
+
+    - name: "CASEBOX | Casebox parameters."
+      lineinfile: dest="{{ casebox_root_dir }}app/config/cbtest/parameters.yml"
+                  line="{{ item }}"
+                  create=yes
+      with_items:
+        - '# This file is auto-generated during the composer install'
+        - 'parameters:'
+        - "    core_name: cbtest"
+        - '    locale: en'
+        - '    server_name: http://192.168.33.3.xip.io/'
+        - '    db_host: 127.0.0.1'
+        - '    db_port: 3306'
+        - "    db_name: cbtest"
+        - "    db_user: cbtest"
+        - "    db_pass: {{ mysql_casebox_password.stdout }}"
+        - "    solr_host: 127.0.0.1"
+        - "    solr_port: 8983"
+        - "    solr_core: cbtest"
+        - "    solr_core_log: cbtest_log"
+        - "    solr_username: ''"
+        - "    solr_password: ''"
+        - '    session.lifetime: 4320'
+        - '    admin_email: admin@example.com'
+        - '    sender_email: emails.sender@example.com'
+        - '    comments_pass:'
+        - '    mailer_transport: smtp'
+        - '    mailer_host: 127.0.0.1'
+        - '    mailer_user: null'
+        - '    mailer_password: null'
+        - "    secret: {{ lookup('pipe', 'openssl rand -hex 13') }}"
+        - '    prefix: cb'
+        - '    solr_schema: http'
+        - "    convert_doc_unoconv_cmd: '/usr/bin/python3 /usr/bin/unoconv'"
+        - "    convert_doc_url: 'http://convert.devops.site/document/convert'"
+        - '    converter: unoconv'
+        - '    redis_host: 127.0.0.1'
+        - '    redis_port: 6379'
+      when: stat_cbtest_parameters_file.stat.exists == False
+      become: yes
+
     - name: "CASEBOX | Composer update."
       shell: "composer update --working-dir={{ casebox_root_dir }}"
 
@@ -674,8 +774,16 @@
       shell: "{{ casebox_root_dir }}bin/console casebox:solr:create --env={{ casebox_core }}"
       ignore_errors: yes
 
+    - name: "CASEBOX | Solr create Casebox cbtest core."
+      shell: "{{ casebox_root_dir }}bin/console casebox:solr:create --env=cbtest"
+      ignore_errors: yes
+
     - name: "CASEBOX | Solr index Casebox default core."
       shell: "{{ casebox_root_dir }}bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
+      ignore_errors: yes
+
+    - name: "CASEBOX | Solr index Casebox cbtest core."
+      shell: "{{ casebox_root_dir }}bin/console casebox:solr:update --all=true --env=cbtest"
       ignore_errors: yes
 
     - name: "CASEBOX | Clear cache."
