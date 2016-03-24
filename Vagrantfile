@@ -30,7 +30,14 @@ Vagrant.configure(2) do |config|
     echo "==========================================";
     echo "Please wait until installation is finished";
     echo "==========================================";
-    ansible-playbook -i "localhost," -c local /var/provision/ansible/playbook.yml
+    ansible-playbook -i "localhost," -c local /var/provision/ansible/default.yml
+  SHELL
+
+   config.vm.provision 'shell', inline: <<-SHELL, privileged: false
+    echo "=============================================";
+    echo "Please wait until cbtest core will be created";
+    echo "=============================================";
+    ansible-playbook -i "localhost," -c local /var/provision/ansible/cbtest.yml
   SHELL
 
 end
