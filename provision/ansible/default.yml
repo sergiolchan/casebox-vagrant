@@ -690,5 +690,9 @@
       become: yes
 
     - name: "MYSQL | Restart MySQL server."
-      service: name=mysql state=restarted
+      shell: "service mysql restart"
+      become: yes
+
+    - name: "SOLR | Restart Solr server."
+      shell: "service solr restart"
       become: yes
