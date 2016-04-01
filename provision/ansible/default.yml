@@ -603,21 +603,27 @@
       stat: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
       register: stat_config_file
 
-    - name: "CASEBOX | Casebox core config."
-      lineinfile: dest="{{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
-                  line="{{ item }}"
-                  create=yes
-      become: yes
+    - name: "CASEBOX | Create casebox config file."
+      file: path="{{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
+            state=touch
+      when: stat_config_file.stat.exists == False
+
+    - name: "CASEBOX | Populate casebox core config."
+      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
       with_items:
         - 'imports:'
         - "    - { resource: {{ casebox_core }}/parameters.yml }"
         - '    - { resource: config.yml }'
       when: stat_config_file.stat.exists == False
+      become: yes
 
-    - name: "CASEBOX | Casebox parameters."
-      lineinfile: dest="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-                  line="{{ item }}"
-                  create=yes
+    - name: "CASEBOX | Create casebox parameters file."
+      file: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+            state=touch
+      when: stat_config_file.stat.exists == False
+
+    - name: "CASEBOX | Populate casebox parameters."
+      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       with_items:
         - '# This file is auto-generated during the composer install'
         - 'parameters:'
@@ -646,8 +652,8 @@
         - "    secret: {{ lookup('pipe', 'openssl rand -hex 13') }}"
         - '    prefix: cb'
         - '    solr_schema: http'
-        - "    convert_doc_unoconv_cmd: '/usr/bin/python3 /usr/bin/unoconv'"
-        - "    convert_doc_url: 'http://convert.devops.site/document/convert'"
+        - "    convert_doc_unoconv_cmd: /usr/bin/python3 /usr/bin/unoconv"
+        - "    convert_doc_url: http://convert.devops.site/document/convert"
         - '    converter: unoconv'
         - '    redis_host: 127.0.0.1'
         - '    redis_port: 6379'
