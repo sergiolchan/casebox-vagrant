@@ -1,0 +1,100 @@
+#
+# file: unoconv/tasks/main.yml
+# Install LibreOffice with unoconv
+#
+---
+
+- name: "LIBREOFFICE | Install LibreOffice."
+  apt: pkg={{item}} state=present
+  with_items:
+    - 'libreoffice-core'
+    - 'libreoffice-common'
+    - 'libreoffice-writer'
+    - 'libreoffice-script-provider-python'
+  become: yes
+
+- name: "UNOCONV | Cleanup."
+  shell: 'rm -rf /tmp/unoconv'
+  become: true
+
+- name: "UNOCONV | Clone unoconv rep."
+  git: repo='https://github.com/dagwieers/unoconv.git' dest='/tmp/unoconv'
+
+- name: "UNOCONV | Build unoconv."
+  shell: 'cd /tmp/unoconv; make install'
+  become: true
+
+- name: "UNOCONV | Cleanup."
+  shell: 'rm -rf /tmp/unoconv'
+  become: true
+
+- name: "UNOCONV | Remove /etc/init.d/unoconvd file."
+  file: path=/etc/init.d/unoconvd state=absent
+  become: true
+
+- name: "UNOCONV | Create unoconv service."
+  lineinfile: dest="/etc/init.d/unoconvd"
+              line={{ item }}
+              create=yes
+              state=present
+  with_items:
+    - "### BEGIN INIT INFO\r"
+    - "# Provides: unoconvd\r"
+    - "# Required-Start: $network\r"
+    - "# Required-Stop: $network\r"
+    - "# Default-Start: 2 3 4 5\r"
+    - "# Default-Stop: 0 1 6\r"
+    - "# Description: unoconvd Converting documents\r"
+    - "### END INIT INFO\r"
+    - "#!/bin/sh\r"
+    - "case \"$1\" in\r"
+    - "    status)\r"
+    - "        if [ $(ps ax | grep '/usr/lib/libreoffice/program/soffice.bin' | grep 'accept=socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ComponentContext' | wc -l) -gt 0 ]; then\r"
+    - "            echo 'Unoconv listener active'\r"
+    - "        else\r"
+    - "            echo 'Unoconv listener inactive'\r"
+    - "        fi\r"
+    - "        ;;\r"
+    - "    start)\r"
+    - "        if [ $(ps ax | grep '/usr/lib/libreoffice/program/soffice.bin' | grep 'accept=socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ComponentContext' | wc -l) -gt 0 ]; then\r"
+    - "            echo 'Unoconv listener already started.'\r"
+    - "        else\r"
+    - "            /usr/bin/python3 /usr/bin/unoconv --listener &\r"
+    - "            echo 'Unoconv listener started.'\r"
+    - "        fi\r"
+    - "        ;;\r"
+    - "    stop)\r"
+    - "        if [ $(ps ax | grep '/usr/lib/libreoffice/program/soffice.bin' | grep 'accept=socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ComponentContext' | wc -l) -gt 0 ]; then\r"
+    - "            killall soffice.bin\r"
+    - "            echo 'Unoconv listener stopped.'\r"
+    - "        else\r"
+    - "            echo 'Unoconv isn’t running.'\r"
+    - "        fi\r"
+    - "        ;;\r"
+    - "    restart)\r"
+    - "        $0 stop\r"
+    - "        sleep 1\r"
+    - "        $0 start\r"
+    - "        ;;\r"
+    - "    *)\r"
+    - "        echo 'Usage: /etc/init.d/unoconvd {start|stop|restart|status}'\r"
+    - "        exit 1\r"
+    - "        ;;\r"
+    - "esac\r"
+  become: true
+
+- name: "UNOCONV | Fix /etc/init.d/unoconvd file format."
+  shell: 'dos2unix /etc/init.d/unoconvd'
+  become: true
+
+- name: "UNOCONV | Fix /etc/init.d/unoconvd file permissions."
+  shell: 'chmod +x /etc/init.d/unoconvd'
+  become: true
+
+- name: "UNOCONV | Init service."
+  command: 'update-rc.d unoconvd defaults'
+  become: true
+
+- name: "UNOCONV | Restart unoconv."
+  shell: "service unoconvd restart"
+  become: true

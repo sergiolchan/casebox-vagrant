@@ -25,8 +25,8 @@ root_db_pass_file: /root/.mysql.password
 
 
 # Solr
-solr_url: "http://ftp.heanet.ie/mirrors/www.apache.org/dist/lucene/solr/5.3.1/solr-5.3.1.tgz"
-solr_ver: "solr-5.3.1"
+solr_url: "http://www-eu.apache.org/dist/lucene/solr/5.5.0/solr-5.5.0.tgz"
+solr_ver: "solr-5.5.0"
 
 
 # Casebox

@@ -17,5 +17,6 @@
     - php5
     - mysql
     - java
+    - unoconv
     - solr
     - casebox
