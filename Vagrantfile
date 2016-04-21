@@ -13,6 +13,9 @@ Vagrant.configure(2) do |config|
     end
 
     config.vm.provision 'shell', inline: <<-SHELL
+        echo "==========================================";
+        echo "Installing common software...             ";
+        echo "==========================================";
         sudo chmod +x /var/provision/bash/preinstall.sh
         sudo /bin/bash -c "/var/provision/bash/preinstall.sh"
     SHELL
