@@ -223,10 +223,13 @@
         - '    - { resource: config.yml }'
       when: stat_config_file.stat.exists == False
 
+    - name: "CASEBOX | Create casebox parameters file."
+      file: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+            state=touch
+      when: stat_config_file.stat.exists == False
+
     - name: "CASEBOX | Casebox parameters."
-      lineinfile: dest="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-                  line="{{ item }}"
-                  create=yes
+      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       with_items:
         - '# This file is auto-generated during the composer install'
         - 'parameters:'
