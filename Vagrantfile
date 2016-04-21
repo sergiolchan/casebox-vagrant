@@ -43,4 +43,15 @@ Vagrant.configure(2) do |config|
         SHELL
     end
 
+    config.vm.provision 'shell', run: 'always', inline: <<-SHELL, privileged: false
+        echo "==========================================";
+        echo " ";
+        echo " ";
+        echo "Installation complete!";
+        echo " ";
+        echo "URL: http://192.168.33.3.xip.io/c/default";
+        echo " ";
+        echo " ";
+        echo "==========================================";
+    SHELL
 end
