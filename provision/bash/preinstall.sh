@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 echo -e "\n[*] Run update command.\n"
 apt-get update --fix-missing;
