@@ -610,16 +610,16 @@
       when: db_pass_file_exist.stat.exists == True
 
     - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       register: stat_config_file
 
     - name: "CASEBOX | Create casebox config file."
-      file: path="{{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
+      file: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
             state=touch
       when: stat_config_file.stat.exists == False
 
     - name: "CASEBOX | Populate casebox core config."
-      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
+      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
       with_items:
         - 'imports:'
         - "    - { resource: {{ casebox_core }}/parameters.yml }"
@@ -628,8 +628,9 @@
       become: yes
 
     - name: "CASEBOX | Create casebox parameters file."
-      file: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+      file: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
             state=touch
+      become: yes
       when: stat_config_file.stat.exists == False
 
     - name: "CASEBOX | Populate casebox parameters."
@@ -672,12 +673,21 @@
 
     - name: "CASEBOX | Check casebox default parameters file."
       stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
+      become: yes
       register: stat_default_parameters_file
 
     - name: "CASEBOX | Populate default parameters file."
       copy: src="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
             dest="{{ casebox_root_dir }}app/config/default/parameters.yml"
       when: stat_default_parameters_file.stat.exists == False
+      become: yes
+
+    - name: "CASEBOX | Set vagrant:vagrant permissions."
+      shell: "chown vagrant:vagrant {{ casebox_root_dir }} -R"
+      become: yes
+
+    - name: "CASEBOX | Set 0777 permissions to var/ folder."
+      shell: "chmod 0777 {{ casebox_root_dir }}var/ -R"
       become: yes
 
     - name: "CASEBOX | Composer update."

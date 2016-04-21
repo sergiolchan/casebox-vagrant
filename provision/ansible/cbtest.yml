@@ -209,11 +209,11 @@
       when: db_pass_file_exist.stat.exists == True
 
     - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       register: stat_config_file
 
     - name: "CASEBOX | Casebox core config."
-      lineinfile: dest="{{ casebox_root_dir }}/app/config/config_{{ casebox_core }}.yml"
+      lineinfile: dest="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
                   line="{{ item }}"
                   create=yes
       become: yes
@@ -224,8 +224,9 @@
       when: stat_config_file.stat.exists == False
 
     - name: "CASEBOX | Create casebox parameters file."
-      file: path="{{ casebox_root_dir }}/app/config/{{ casebox_core }}/parameters.yml"
+      file: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
             state=touch
+      become: yes
       when: stat_config_file.stat.exists == False
 
     - name: "CASEBOX | Casebox parameters."
