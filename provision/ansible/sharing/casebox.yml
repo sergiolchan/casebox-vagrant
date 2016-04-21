@@ -14,8 +14,19 @@
       apt: pkg='samba' state=installed
       become: yes
 
+    - stat: path='/etc/samba/smb.conf'
+      register: smbconf
+      become: yes
+
     - name: "SHELL | Backup smb.conf file."
       shell: "mv /etc/samba/smb.conf /etc/samba/smb.conf.bak"
+      when: smbconf.stat.exists == True
+      become: yes
+
+    - name: "FILE | Create smb.conf file."
+      file: path="/etc/samba/smb.conf"
+            state=touch
+      when: smbconf.stat.exists == False
       become: yes
 
     - name: "SHELL | Populate smb.conf file."
@@ -43,11 +54,13 @@
       become: yes
 
     - name: "SHELL | Restart SAMBA."
-      shell: "service samba restart"
+      service: name=samba state=restarted
+      ignore_errors: yes
       become: yes
 
     - name: "SHELL | Reload SAMBA."
-      shell: "service samba reload"
+      service: name=samba state=reloaded
+      ignore_errors: yes
       become: yes
 
     - name: "SHELL | Update smbpasswd."
