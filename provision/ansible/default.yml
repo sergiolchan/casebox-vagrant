@@ -683,7 +683,7 @@
       when: stat_default_parameters_file.stat.exists == False
       become: yes
 
-    - name: "CASEBOX | Set vagrant:vagrant permissions."
+    - name: "CASEBOX | Set vagrant:vagrant owner for docroot."
       shell: "chown vagrant:vagrant {{ casebox_root_dir }} -R"
       become: yes
 
@@ -710,3 +710,10 @@
 
     - name: "CASEBOX | Add Casebox assests."
       shell: "{{ casebox_root_dir }}bin/console casebox:min:assets --env={{ casebox_core }}"
+
+    - name: "CASEBOX | Set www-data:www-data owner for var/cache, files directories."
+      shell: "chown www-data:www-data {{ casebox_root_dir }}var/{{ item }} -R"
+      with_items:
+        - 'cache'
+        - 'files'
+      become: yes
