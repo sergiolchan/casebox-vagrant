@@ -22,6 +22,7 @@
         - 'sendmail'
         - 'dos2unix'
         - 'openssl'
+        - 'software-properties-common'
 
     # Locale
     - locales:
@@ -33,8 +34,9 @@
 
     # JAVA
     - java_packages:
-        - 'openjdk-7-jre'
-        - 'openjdk-7-jdk'
+        - 'oracle-java8-installer'
+        - 'ca-certificates'
+        - 'oracle-java8-set-default'
 
     # PHP
     - php_packages:
@@ -62,8 +64,8 @@
         - 'mysql-server'
 
     # Solr
-    - solr_url: 'http://www-eu.apache.org/dist/lucene/solr/5.5.0/solr-5.5.0.tgz'
-    - solr_ver: 'solr-5.5.0'
+    - solr_url: 'http://www-eu.apache.org/dist/lucene/solr/6.0.0/solr-6.0.0.tgz'
+    - solr_ver: 'solr-6.0.0'
 
     # LibreOFFICE
     - libreoffice_packages:
@@ -370,11 +372,19 @@
       become: yes
 
     # Java
-    - name: "JAVA | Install java."
-      apt: pkg={{ item }}
-           force=yes
-           update_cache=yes
-           state=present
+    - name: "JAVA | Add Oracle Java Repository."
+      apt_repository: repo='ppa:webupd8team/java'
+      become: yes
+
+    - name: "JAVA | Accept Java 8 License."
+      debconf: name='oracle-java8-installer'
+               question='shared/accepted-oracle-license-v1-1'
+               value='true'
+               vtype='select'
+      become: yes
+
+    - name: "JAVA | Install Oracle Java 8."
+      apt: name={{item}} state=latest
       with_items: "{{ java_packages }}"
       become: yes
 
