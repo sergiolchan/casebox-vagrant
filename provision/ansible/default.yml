@@ -699,16 +699,3 @@
 
     - name: "CASEBOX | Add Casebox assests."
       shell: "{{ casebox_root_dir }}bin/console casebox:min:assets --env={{ casebox_core }}"
-
-    # Cleanup and restart services
-    - name: "NGINX | Restart Nginx webserver."
-      shell: "service nginx restart"
-      become: yes
-
-    - name: "MYSQL | Restart MySQL server."
-      shell: "service mysql restart"
-      become: yes
-
-    - name: "SOLR | Restart Solr server."
-      shell: "service solr restart"
-      become: yes

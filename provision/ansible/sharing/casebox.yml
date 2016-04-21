@@ -1,0 +1,54 @@
+#
+# File: casebox.yml
+# Description: Share '/var/www/casebox' directory
+#
+---
+
+- hosts: "*"
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "APT | Install SAMBA."
+      apt: pkg='samba' state=installed
+      become: yes
+
+    - name: "SHELL | Backup smb.conf file."
+      shell: "mv /etc/samba/smb.conf /etc/samba/smb.conf.bak"
+      become: yes
+
+    - name: "SHELL | Populate smb.conf file."
+      shell: "echo '{{ item }}' >> /etc/samba/smb.conf"
+      with_items:
+        - '[global]'
+        - '   workgroup = workgroup'
+        - '   server string = casebox'
+        - '   log file = /var/log/samba/log.%m'
+        - '   max log size = 1000'
+        - '   syslog = 0'
+        - '   panic action = /usr/share/samba/panic-action.%d'
+        - '   server role = standalone'
+        - '[casebox]'
+        - '   comment = Share casebox directory'
+        - '   path = /var/www/casebox'
+        - '   browseable = yes'
+        - '   read only = no'
+        - '   guest ok = no'
+        - '   valid users = vagrant'
+
+    - name: "SHELL | Backup smb.conf file."
+      shell: "testparm"
+      become: yes
+
+    - name: "SHELL | Restart SAMBA."
+      shell: "service samba restart"
+      become: yes
+
+    - name: "SHELL | Reload SAMBA."
+      shell: "service samba reload"
+      become: yes
+
+    - name: "SHELL | Update smbpasswd."
+      shell: "bash -c 'echo -ne \"vagrant\nvagrant\n\" | smbpasswd -a -s vagrant'"
+      become: yes

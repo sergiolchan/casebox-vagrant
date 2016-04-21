@@ -1,0 +1,25 @@
+#
+# File: services.yml
+# Description: Restart vagrant services
+#
+---
+
+- hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    - services:
+        - 'mysql'
+        - 'nginx'
+        - 'solr'
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "SOLR | Restart services."
+      shell: "service {{ item }} restart"
+      with_items: "{{ services }}"
+      become: yes
