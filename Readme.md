@@ -18,17 +18,21 @@ Download and install:
 
 Clone Casebox v1|v2 ansible installation script (https://github.com/KETSE/casebox-vagrant.git)
 
-Navigate to ```/path/to/casebox``` directory.
+Open your favorite command prompt (ex. Git Bash on Windows, Terminal on MacOS and Ubuntu)
 
-Run vagrant (virtualbox) machine: ```vagrant up```
+Navigate to `/path/to/casebox` directory.
+
+Run vagrant (virtualbox) machine: `vagrant up`
+
+For development mode run: `ENV=dev vagrant up`
 
 
 Vagrant (virtualbox) ssh access
 -------------------------------
 
-In order to login into vagrant (virtualbox) machine run ```vagrant ssh``` command. 
+In order to login into vagrant (virtualbox) machine run `vagrant ssh` command. 
 
-Also you can login via ssh connection ```ssh vagrant@192.168.33.3```.
+Also you can login via ssh connection `ssh vagrant@192.168.33.3`.
 
 Vagrant credentials (user/password): vagrant / vagrant
 
@@ -53,19 +57,30 @@ login to vagrant box using 'vagrant ssh' command.
 
 After that use 'cat' command to list the following files with credentials:
 
-* MySQL ```root``` password in file: ```/root/.mysql.root.password```
-* MySQL ```casebox``` password in file: ```/home/vagrant/.mysql.casebox.password```
-* Casebox default ```root``` user password: ```a```
+* MySQL `root` password in file: `/root/.mysql.root.password`
+* MySQL `casebox` password in file: `/home/vagrant/.mysql.casebox.password`
+* Casebox default `root` user password: `a`
 
 
 Vagrant utils
 -------------
 
-Run vagrant (virtualbox) machine: ```vagrant up```
+Run vagrant (virtualbox) machine: `vagrant up`
 
-Stop vagrant (virtualbox) machine: ```vagrant halt```
+Stop vagrant (virtualbox) machine: `vagrant halt`
 
-Update vagrant (virtualbox) machine: ```vagrant reload --provision```
+Update vagrant (virtualbox) machine: `vagrant reload --provision`
+
+
+For developers
+--------------
+
+Run vagrant (virtualbox) machine: `ENV=dev vagrant up`
+
+Mount Casebox sources from VirtualBox into your host machine `//192.168.33.3/casebox` 
+(for Windows: `\\192.168.33.3\casebox`). 
+
+Now you will be able to edit Casebox files.
 
 
 Issuses
