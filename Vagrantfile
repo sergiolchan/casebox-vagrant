@@ -12,12 +12,12 @@ Vagrant.configure(2) do |config|
         vb.memory = '2048'
     end
 
-    config.vm.provision 'shell', inline: <<-SHELL
+    config.vm.provision 'shell', inline: <<-SHELL, privileged: true
         echo "==========================================";
         echo "Installing common software...             ";
         echo "==========================================";
-        sudo chmod +x /var/provision/bash/preinstall.sh
-        sudo /bin/bash -c "/var/provision/bash/preinstall.sh"
+        chmod +x /var/provision/bash/preinstall.sh
+        source /var/provision/bash/preinstall.sh
     SHELL
 
     config.vm.provision 'shell', inline: <<-SHELL, privileged: false

@@ -609,14 +609,15 @@
       register: mysql_casebox_password
       when: db_pass_file_exist.stat.exists == True
 
-    - name: "CASEBOX | Check casebox config file."
+    - name: "CASEBOX | Check casebox parameters.yml file."
       stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
       register: stat_config_file
 
-    - name: "CASEBOX | Create casebox config file."
+    - name: "CASEBOX | Create casebox config_*.yml file."
       file: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
             state=touch
       when: stat_config_file.stat.exists == False
+      become: yes
 
     - name: "CASEBOX | Populate casebox core config."
       shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
@@ -630,8 +631,8 @@
     - name: "CASEBOX | Create casebox parameters file."
       file: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
             state=touch
-      become: yes
       when: stat_config_file.stat.exists == False
+      become: yes
 
     - name: "CASEBOX | Populate casebox parameters."
       shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
