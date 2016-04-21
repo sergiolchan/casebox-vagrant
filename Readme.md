@@ -78,7 +78,7 @@ For developers
 Run vagrant (virtualbox) machine: `ENV=dev vagrant up`
 
 Mount Casebox sources from VirtualBox into your host machine `//192.168.33.3/casebox` 
-(for Windows: `\\192.168.33.3\casebox`). 
+(for Windows: `\\192.168.33.3\casebox`) via SAMBA. 
 
 Now you will be able to edit Casebox files.
 
