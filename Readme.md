@@ -87,8 +87,8 @@ SAMBA `vagrant` user password: `vagrant`
 Now you will be able to edit Casebox files from your favorite IDE.
 
 
-Issuses
--------
+Issues
+------
 
 *   Issue: "It appears your machine doesn't support NFS, or there is not an adapter to enable NFS on this machine for Vagrant"
     
