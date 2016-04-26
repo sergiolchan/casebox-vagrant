@@ -50,14 +50,14 @@ Vagrant.configure(2) do |config|
             echo "================================================================";
             ansible-playbook -i "localhost," -c local /var/provision/ansible/sharing/casebox.yml
         SHELL
-
-        config.vm.provision 'shell', run: 'always', inline: <<-SHELL, privileged: false
-            echo "================================================================";
-            echo "Restart vagrant services...";
-            echo "================================================================";
-            ansible-playbook -i "localhost," -c local /var/provision/ansible/services.yml
-        SHELL
     end
+
+    config.vm.provision 'shell', run: 'always', inline: <<-SHELL, privileged: false
+        echo "================================================================";
+        echo "Restart vagrant services...";
+        echo "================================================================";
+        ansible-playbook -i "localhost," -c local /var/provision/ansible/services.yml
+    SHELL
 
     config.vm.provision 'shell', run: 'always', inline: <<-SHELL, privileged: false
         echo "================================================================";
