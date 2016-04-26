@@ -5,7 +5,6 @@
 ---
 
 - hosts: "*"
-  no_log: True
 
   #
   # Variables
