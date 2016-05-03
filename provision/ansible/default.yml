@@ -1,6 +1,6 @@
 #
-# File: playbook.yml
-# Description: Default (Base) provisioning.
+# File: default.yml
+# Description: Default (Base) environment provisioning.
 #
 ---
 
@@ -59,20 +59,6 @@
         - 'php-imagick'
 
     - php_inifile: '/etc/php/7.0/fpm/php.ini'
-
-    # MySQL
-    - root_db_pass_file: '/root/.mysql.root.password'
-
-    - mysql_packages:
-        - 'python-pycurl'
-        - 'python-mysqldb'
-        - 'mysql-common'
-        - 'mysql-client'
-        - 'mysql-server'
-
-    # Solr
-    - solr_url: 'http://www-eu.apache.org/dist/lucene/solr/6.0.0/solr-6.0.0.tgz'
-    - solr_ver: 'solr-6.0.0'
 
     # LibreOFFICE
     - libreoffice_packages:
@@ -197,92 +183,6 @@
       when: composer.stat.exists == False
       become: yes
 
-    # MySQL
-    - name: "MYSQL | Update apt cache."
-      shell: "apt-get update --fix-missing"
-      become: yes
-
-    - name: "MYSQL | Install MySQL packages."
-      apt: pkg={{ item }}
-           force=yes
-           update_cache=yes
-           state=present
-      with_items: "{{ mysql_packages }}"
-      environment:
-        DEBIAN_FRONTEND: noninteractive
-      become: yes
-
-    - name: "MYSQL | Check MySQL root password."
-      stat: path={{ root_db_pass_file }}
-      register: root_db_pass_file_exist
-      become: yes
-
-    - name: "MYSQL | Generate MySQL root password."
-      lineinfile: dest="{{ root_db_pass_file }}"
-                  line="{{ lookup('pipe', 'openssl rand -hex 10') }}"
-                  create=yes
-                  state=present
-      when: root_db_pass_file_exist.stat.exists == False
-      become: yes
-
-    - name: "MYSQL | Fetch MySQL root password."
-      shell: "cat {{ root_db_pass_file }}"
-      register: mysq_root_password
-      become: yes
-
-    - name: "MYSQL | Update MySQL root password for localhost."
-      mysql_user: name=root
-                  host={{ item }}
-                  password={{ mysq_root_password.stdout }}
-      with_items:
-        - '127.0.0.1'
-        - '::1'
-        - 'localhost'
-      when: root_db_pass_file_exist.stat.exists == False
-      become: yes
-
-    - name: "MYSQL | Update MySQL configuration file."
-      lineinfile: dest=/etc/mysql/my.cnf line="{{ item }}" create=yes
-      with_items:
-        - '[client]'
-        - 'port=3306'
-        - 'socket=/var/run/mysqld/mysqld.sock'
-        - '[mysqld_safe]'
-        - 'socket=/var/run/mysqld/mysqld.sock'
-        - 'nice=0'
-        - '[mysqld]'
-        - 'user=mysql'
-        - 'pid-file=/var/run/mysqld/mysqld.pid'
-        - 'socket=/var/run/mysqld/mysqld.sock'
-        - 'port=3306'
-        - 'basedir=/usr'
-        - 'datadir=/var/lib/mysql'
-        - 'tmpdir=/tmp'
-        - 'lc-messages-dir=/usr/share/mysql'
-        - 'bind-address=0.0.0.0'
-        - 'key_buffer=16M'
-        - 'max_allowed_packet=16M'
-        - 'thread_stack=192K'
-        - 'thread_cache_size=8'
-        - 'myisam-recover=BACKUP'
-        - 'query_cache_limit=1M'
-        - 'query_cache_size=16M'
-        - 'log_error=/var/log/mysql/error.log'
-        - 'expire_logs_days=10'
-        - 'max_binlog_size=100M'
-        - '[mysqldump]'
-        - 'quick'
-        - 'quote-names'
-        - 'max_allowed_packet=16M'
-        - '[mysql]'
-        - '[isamchk]'
-        - 'key_buffer=16M'
-      become: yes
-
-    - name: "MYSQL | Restart MySQL server."
-      service: name=mysql state=restarted
-      become: yes
-
     # Java
     - name: "JAVA | Add Oracle Java Repository."
       apt_repository: repo='ppa:webupd8team/java'
@@ -391,22 +291,3 @@
     - name: "UNOCONV | Restart unoconv."
       service: name=unoconvd state=running
       become: true
-
-    # Solr
-    - name: "SOLR | Check Apache Solr status."
-      stat: path='/etc/init.d/solr'
-      register: solr_service_status
-      become: yes
-
-    - name: "SOLR | Download Apache Solr."
-      shell: "cd /tmp; wget {{ solr_url }}"
-      when: solr_service_status.stat.exists == False
-
-    - name: "SOLR | Extract Apache Solr."
-      shell: "cd /tmp; tar xzf {{ solr_ver }}.tgz {{ solr_ver }}/bin/install_solr_service.sh --strip-components=2"
-      when: solr_service_status.stat.exists == False
-
-    - name: "SOLR | Install Apache Solr."
-      shell: "cd /tmp ; ./install_solr_service.sh {{ solr_ver }}.tgz"
-      when: solr_service_status.stat.exists == False
-      become: yes

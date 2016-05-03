@@ -1,5 +1,5 @@
 #
-# File: playbook.yml
+# File: casebox.yml
 # Description: Casebox2 Ansible installation provision
 #
 ---
@@ -12,6 +12,12 @@
   vars:
     # MySQL
     - root_db_pass_file: '/root/.mysql.root.password'
+    - mysql_packages:
+        - 'python-pycurl'
+        - 'python-mysqldb'
+        - 'mysql-common'
+        - 'mysql-client'
+        - 'mysql-server'
 
     # Casebox
     - casebox_server_name: '192.168.33.3.xip.io'
@@ -51,10 +57,33 @@
       - { src: '/etc/nginx/sites-available/http_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/http_{{ casebox_core }}.conf' }
       - { src: '/etc/nginx/sites-available/https_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/https_{{ casebox_core }}.conf' }
 
+    # Solr
+    - solr_url: 'http://www-eu.apache.org/dist/lucene/solr/6.0.0/solr-6.0.0.tgz'
+    - solr_ver: 'solr-6.0.0'
+
   #
   # Tasks
   #
   tasks:
+      # Solr
+    - name: "SOLR | Check Apache Solr status."
+      stat: path='/etc/init.d/solr'
+      register: solr_service_status
+      become: yes
+
+    - name: "SOLR | Download Apache Solr."
+      shell: "cd /tmp; wget {{ solr_url }}"
+      when: solr_service_status.stat.exists == False
+
+    - name: "SOLR | Extract Apache Solr."
+      shell: "cd /tmp; tar xzf {{ solr_ver }}.tgz {{ solr_ver }}/bin/install_solr_service.sh --strip-components=2"
+      when: solr_service_status.stat.exists == False
+
+    - name: "SOLR | Install Apache Solr."
+      shell: "cd /tmp ; ./install_solr_service.sh {{ solr_ver }}.tgz"
+      when: solr_service_status.stat.exists == False
+      become: yes
+
     # Nginx
     - name: "NGINX | Remove Casebox http virtual host."
       file: path="/etc/nginx/sites-available/http_{{ casebox_core }}.conf" state=absent
@@ -153,20 +182,60 @@
         - install
 
     # MySQL
-    - name: "MYSQL | Update apt cache."
-      shell: "apt-get update --fix-missing"
-      become: yes
-      tags:
-        - install
-
     - name: "MYSQL | Install MySQL packages."
-      apt: pkg={{ item }}
+      apt: pkg="{{ item }}"
            force=yes
            update_cache=yes
            state=present
       with_items: "{{ mysql_packages }}"
       environment:
         DEBIAN_FRONTEND: noninteractive
+      become: yes
+      tags:
+        - install
+
+    - name: "MYSQL | Update MySQL configuration file."
+      lineinfile: dest='/etc/mysql/my.cnf' line="{{ item }}" create=yes
+      with_items:
+        - '[client]'
+        - 'port=3306'
+        - 'socket=/var/run/mysqld/mysqld.sock'
+        - '[mysqld_safe]'
+        - 'socket=/var/run/mysqld/mysqld.sock'
+        - 'nice=0'
+        - '[mysqld]'
+        - 'user=mysql'
+        - 'pid-file=/var/run/mysqld/mysqld.pid'
+        - 'socket=/var/run/mysqld/mysqld.sock'
+        - 'port=3306'
+        - 'basedir=/usr'
+        - 'datadir=/var/lib/mysql'
+        - 'tmpdir=/tmp'
+        - 'lc-messages-dir=/usr/share/mysql'
+        - 'bind-address=0.0.0.0'
+        - 'key_buffer=16M'
+        - 'max_allowed_packet=16M'
+        - 'thread_stack=192K'
+        - 'thread_cache_size=8'
+        - 'myisam-recover=BACKUP'
+        - 'query_cache_limit=1M'
+        - 'query_cache_size=16M'
+        - 'log_error=/var/log/mysql/error.log'
+        - 'expire_logs_days=10'
+        - 'max_binlog_size=100M'
+        - '[mysqldump]'
+        - 'quick'
+        - 'quote-names'
+        - 'max_allowed_packet=16M'
+        - '[mysql]'
+        - '[isamchk]'
+        - 'key_buffer=16M'
+      become: yes
+      tags:
+        - install
+
+    - name: "MYSQL | Restart MySQL server."
+      service: name=mysql state=restarted
       become: yes
       tags:
         - install

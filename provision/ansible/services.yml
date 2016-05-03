@@ -11,7 +11,6 @@
   #
   vars:
     - services:
-        - 'mysql'
         - 'nginx'
         - 'solr'
         - 'unoconvd'
@@ -22,28 +21,29 @@
   # Tasks
   #
   tasks:
-    - name: "SOLR | Restart services."
+    - name: "SERVIE | Restart services."
       shell: "service {{ item }} restart"
       with_items: "{{ services }}"
+      ignore_errors: yes
       become: yes
 
     # Dashboard app start services
     - name: "APP | Stop dashboard as webserver."
-      shell: "{{ app_root_dir }}/bin/console server:stop 0.0.0.0:8000 --env={{ app_env }}"
+      shell: "php {{ app_root_dir }}/bin/console server:stop 0.0.0.0:8000 --env={{ app_env }}"
       ignore_errors: yes
       become: yes
 
     - name: "APP | Run dashboard as webserver."
-      shell: "{{ app_root_dir }}/bin/console server:start 0.0.0.0:8000 --env={{ app_env }}"
+      shell: "php {{ app_root_dir }}/bin/console server:start 0.0.0.0:8000 --env={{ app_env }}"
       ignore_errors: yes
       become: yes
 
     - name: "APP | Stop queue."
-      shell: "{{ app_root_dir }}/bin/console app:queue:stop"
+      shell: "php {{ app_root_dir }}/bin/console app:queue:stop"
       ignore_errors: yes
       become: yes
 
     - name: "APP | Run queue in background."
-      shell: "{{ app_root_dir }}/bin/console app:queue:start"
+      shell: "php {{ app_root_dir }}/bin/console app:queue:start"
       ignore_errors: yes
       become: yes
