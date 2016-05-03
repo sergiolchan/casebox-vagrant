@@ -12,9 +12,7 @@
   #
   vars:
     - passphrase: "{{ passphrase }}"
-    - mount_folders:
-        - '/var/www/casebox/'
-    - encrypted_root: '/var/www/casebox'
+    - encrypted_root: "{{ encrypted_root }}"
     - ecryptfs_dir: '/root/.ecryptfs'
     - sig_file: '/root/.ecryptfs/sig-cache.txt'
 
@@ -30,7 +28,7 @@
 
     - name: 'USER | Add root user to fuse group.'
       shell: "mkdir -p {{ item }}"
-      with_items: "{{ mount_folders }}"
+      with_items: "{{ encrypted_root }}"
       become: yes
       ignore_errors: true
       tags:
@@ -39,7 +37,7 @@
     # Umount
 #    - name: 'ECRYPTFS | Umount data drive.'
 #      shell: "umount {{ item }}"
-#      with_items: "{{ mount_folders }}"
+#      with_items: "{{ encrypted_root }}"
 #      become: yes
 #      ignore_errors: true
 #      tags:

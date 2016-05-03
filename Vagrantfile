@@ -1,6 +1,7 @@
 require 'getoptlong'
 
 opts = GetoptLong.new(
+  [ '-f', GetoptLong::OPTIONAL_ARGUMENT ],
   [ '--env', GetoptLong::OPTIONAL_ARGUMENT ],
   [ '--provision', GetoptLong::OPTIONAL_ARGUMENT ],
 )
