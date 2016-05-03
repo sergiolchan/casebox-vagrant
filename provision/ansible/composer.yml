@@ -29,30 +29,24 @@
       tags:
         - update
 
-    - name: "CASEBOX | Solr create Casebox default core."
-      shell: "{{ casebox_root_dir }}/bin/console casebox:solr:create --env={{ casebox_core }}"
-      ignore_errors: yes
-      tags:
-        - update
-
     - name: "CASEBOX | Solr index Casebox default core."
-      shell: "{{ casebox_root_dir }}/bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
+      shell: "php {{ casebox_root_dir }}/bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
       ignore_errors: yes
       tags:
         - update
 
     - name: "CASEBOX | Clear cache."
-      shell: "{{ casebox_root_dir }}/bin/console ca:cl --env={{ casebox_core }}"
+      shell: "php {{ casebox_root_dir }}/bin/console ca:cl --env={{ casebox_core }}"
       tags:
         - update
 
     - name: "CASEBOX | Update Casebox database schema."
-      shell: "{{ casebox_root_dir }}/bin/console doctrine:schema:update --force"
+      shell: "php {{ casebox_root_dir }}/bin/console doctrine:schema:update --force"
       tags:
         - update
 
     - name: "CASEBOX | Add Casebox assests."
-      shell: "{{ casebox_root_dir }}/bin/console casebox:min:assets --env={{ casebox_core }}"
+      shell: "php {{ casebox_root_dir }}/bin/console casebox:min:assets --env={{ casebox_core }}"
       tags:
         - update
 
@@ -68,6 +62,12 @@
 
     - name: "NGINX | Restart Nginx webserver."
       shell: "service nginx restart"
+      become: yes
+      tags:
+        - update
+
+    - name: "MYSQL | Restart MySQL server."
+      shell: "service mysql restart"
       become: yes
       tags:
         - update
