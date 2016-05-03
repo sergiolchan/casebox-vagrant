@@ -15,6 +15,7 @@
     - mount_folders:
         - '/var/www/casebox/'
     - encrypted_root: '/var/www/casebox'
+    - ecryptfs_dir: '/root/.ecryptfs'
     - sig_file: '/root/.ecryptfs/sig-cache.txt'
 
   #
@@ -57,6 +58,12 @@
     - name: 'ECRYPTFS | Add tokens into user session keyring.'
       shell: 'printf "%s" "{{ passphrase }}" | ecryptfs-add-passphrase | grep -o "\[.*\]" | sed "s/\[//g;s/\]//g"'
       register: password_hash
+      become: yes
+      tags:
+        - mount
+
+    - name: "ECRYPTFS | Create .ecryptfs dir."
+      file: path="{{ ecryptfs_dir }}" state=directory
       become: yes
       tags:
         - mount

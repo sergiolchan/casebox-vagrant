@@ -83,16 +83,6 @@
     - name: "APP | Add App assests."
       shell: "{{ app_root_dir }}/bin/console assets:install --relative --symlink {{ app_root_dir }}/web --env={{ app_env }}"
 
-    - name: "APP | Run dashboard as webserver."
-      shell: "{{ app_root_dir }}/bin/console server:start 0.0.0.0:8000 --env={{ app_env }}"
-      ignore_errors: yes
-      become: yes
-
-    - name: "APP | Run queue in background."
-      shell: "{{ app_root_dir }}/bin/console app:queue:start --env={{ app_env }}"
-      ignore_errors: yes
-      become: yes
-
     - name: "APP | Fix permissions."
       shell: "chmod 0777 -R {{ app_root_dir }}/{{ item }}"
       with_items:

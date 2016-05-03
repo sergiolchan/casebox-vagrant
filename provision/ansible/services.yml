@@ -39,11 +39,11 @@
       become: yes
 
     - name: "APP | Stop queue."
-      shell: "{{ app_root_dir }}/bin/console app:queue:stop --env={{ app_env }}"
+      shell: "{{ app_root_dir }}/bin/console app:queue:stop"
       ignore_errors: yes
       become: yes
 
     - name: "APP | Run queue in background."
-      shell: "{{ app_root_dir }}/bin/console app:queue:start --env={{ app_env }}"
+      shell: "{{ app_root_dir }}/bin/console app:queue:start"
       ignore_errors: yes
       become: yes
