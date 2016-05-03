@@ -1,0 +1,21 @@
+#
+# File: service.yml
+# Description: Restart service
+#
+---
+
+- hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    - service: "{{ service }}"
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "SERVICE | Restart services."
+      shell: "service {{ service }} restart"
+      become: yes

@@ -1,0 +1,102 @@
+#
+# File: dashboard.yml
+# Description: Vagrant setup prod environemnt.
+#
+---
+
+- hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    # App
+    - app_name: 'casebox-admin'
+    - app_env: 'prod'
+    - app_root_dir: "/var/www/{{ app_name }}"
+    - app_git_url: 'https://github.com/KETSE/casebox-admin.git'
+    - app_git_branch: 'master'
+
+  #
+  # Tasks
+  #
+  tasks:
+    # App
+    - name: "APP | Check APP directory."
+      stat: path={{ app_root_dir }}
+      register: stat_app_dir
+      become: yes
+
+    - name: "APP | Create app directory."
+      file: path={{ app_root_dir }}
+            state=directory
+            mode=0755
+      when: stat_app_dir.stat.exists == False
+      become: yes
+
+    - name: "APP | Clone app."
+      git: repo={{ app_git_url }}
+           dest={{ app_root_dir }}
+           version={{ app_git_branch }}
+      when: stat_app_dir.stat.exists == False
+      become: yes
+
+    - name: "APP | Check app parameters file."
+      stat: path="{{ app_root_dir }}/app/config/parameters.yml"
+      register: config_file_exist
+
+    - name: "APP | Create app parameters file."
+      file: path="{{ app_root_dir }}/app/config/parameters.yml" state=touch
+      when: config_file_exist.stat.exists == False
+      become: yes
+
+    - name: "APP | Populate app parameters."
+      shell: "echo '{{ item }}' >> {{ app_root_dir }}/app/config/parameters.yml"
+      with_items:
+        - '# This file is auto-generated during the composer install'
+        - 'parameters:'
+        - '    server_name: http://192.168.33.3.xip.io'
+        - "    database_dir: '%kernel.root_dir%/../var/database'"
+        - '    admin_email: noreply@casebox.org'
+        - '    mailer_transport: smtp'
+        - '    mailer_host: 127.0.0.1'
+        - '    mailer_user: null'
+        - '    mailer_password: null'
+        - "    secret: {{ lookup('pipe', 'openssl rand -hex 13') }}"
+      when: config_file_exist.stat.exists == False
+      become: yes
+
+    - name: "APP | Update sources."
+      shell: "cd {{ app_root_dir }}/; git pull origin master;"
+      become: yes
+
+    - name: "APP | Fix files permissions."
+      shell: "chown vagrant:vagrant {{ app_root_dir }}/ -R"
+      become: yes
+
+    - name: "APP | Composer update."
+      shell: "composer update --working-dir={{ app_root_dir }}/"
+
+    - name: "APP | Clear cache."
+      shell: "{{ app_root_dir }}/bin/console ca:cl --env={{ app_env }}"
+
+    - name: "APP | Add App assests."
+      shell: "{{ app_root_dir }}/bin/console assets:install --relative --symlink {{ app_root_dir }}/web --env={{ app_env }}"
+
+    - name: "APP | Run dashboard as webserver."
+      shell: "{{ app_root_dir }}/bin/console server:start 0.0.0.0:8000 --env={{ app_env }}"
+      ignore_errors: yes
+      become: yes
+
+    - name: "APP | Run queue in background."
+      shell: "{{ app_root_dir }}/bin/console app:queue:start --env={{ app_env }}"
+      ignore_errors: yes
+      become: yes
+
+    - name: "APP | Fix permissions."
+      shell: "chmod 0777 -R {{ app_root_dir }}/{{ item }}"
+      with_items:
+        - 'var/cache'
+        - 'var/logs'
+        - 'var/database'
+      become: yes

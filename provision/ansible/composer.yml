@@ -1,0 +1,79 @@
+#
+# File: composer.yml
+# Description: Perform composer update
+#
+---
+
+- hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    - casebox_core: "{{ casebox_core }}"
+    - casebox_root_dir: '/var/www/casebox'
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "CASEBOX | Composer update."
+      shell: "composer update --working-dir={{ casebox_root_dir }}"
+      become: yes
+      tags:
+        - update
+
+    - name: "CASEBOX | Set vagrant:vagrant owner for docroot."
+      shell: "chown vagrant:vagrant {{ casebox_root_dir }} -R"
+      become: yes
+      tags:
+        - update
+
+    - name: "CASEBOX | Solr create Casebox default core."
+      shell: "{{ casebox_root_dir }}/bin/console casebox:solr:create --env={{ casebox_core }}"
+      ignore_errors: yes
+      tags:
+        - update
+
+    - name: "CASEBOX | Solr index Casebox default core."
+      shell: "{{ casebox_root_dir }}/bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
+      ignore_errors: yes
+      tags:
+        - update
+
+    - name: "CASEBOX | Clear cache."
+      shell: "{{ casebox_root_dir }}/bin/console ca:cl --env={{ casebox_core }}"
+      tags:
+        - update
+
+    - name: "CASEBOX | Update Casebox database schema."
+      shell: "{{ casebox_root_dir }}/bin/console doctrine:schema:update --force"
+      tags:
+        - update
+
+    - name: "CASEBOX | Add Casebox assests."
+      shell: "{{ casebox_root_dir }}/bin/console casebox:min:assets --env={{ casebox_core }}"
+      tags:
+        - update
+
+    - name: "CASEBOX | Set www-data:www-data owner for var/cache, files directories."
+      shell: "chmod 0777 {{ casebox_root_dir }}/var/{{ item }} -R"
+      with_items:
+        - 'logs'
+        - 'cache'
+        - 'files'
+      become: yes
+      tags:
+        - update
+
+    - name: "NGINX | Restart Nginx webserver."
+      shell: "service nginx restart"
+      become: yes
+      tags:
+        - update
+
+    - name: "SOLR | Restart Solr webserver."
+      shell: "service solr restart"
+      become: yes
+      tags:
+        - update

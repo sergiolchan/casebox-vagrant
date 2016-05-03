@@ -1,6 +1,6 @@
 #
 # File: playbook.yml
-# Description: Casebox2 Ansible installation provision
+# Description: Default (Base) provisioning.
 #
 ---
 
@@ -10,6 +10,10 @@
   # Variables
   #
   vars:
+    - ssh_users:
+        - 'vagrant'
+        - 'root'
+
     # Common software
     - common_packages:
         - 'git'
@@ -23,6 +27,7 @@
         - 'dos2unix'
         - 'openssl'
         - 'software-properties-common'
+        - 'ecryptfs-utils'
 
     # Locale
     - locales:
@@ -41,12 +46,14 @@
     # PHP
     - php_packages:
         - 'php7.0-cli'
+        - 'php7.0-cgi'
         - 'php7.0-dev'
         - 'php7.0-fpm'
         - 'php7.0-json'
         - 'php7.0-tidy'
         - 'php7.0-curl'
         - 'php7.0-mbstring'
+        - 'php7.0-bcmath'
         - 'php7.0-common'
         - 'php7.0-mysql'
         - 'php-imagick'
@@ -74,48 +81,16 @@
         - 'libreoffice-writer'
         - 'libreoffice-script-provider-python'
 
-    # Casebox
-    - casebox_server_name: '192.168.33.3.xip.io'
-    - casebox_core: 'default'
-    - casebox_root_dir: '/var/www/casebox/'
-    - casebox_htdocs_dir: '/var/www/casebox/web'
-    - casebox_default_email: 'admin@example.com'
-    - casebox_git_url: 'https://github.com/KETSE/casebox.git'
-    - casebox_git_branch: 'v2'
-    - casebox_db_user: "{{ casebox_core }}"
-    - casebox_db_pass_file: '~/.mysql.casebox.password'
-
-    - casebox_db_names:
-      - { db: '{{ casebox_core }}', file: '{{ casebox_root_dir }}var/backup/cb_default.sql'}
-
-    - casebox_db_hosts:
-        - '127.0.0.1'
-        - 'localhost'
-        - '::1'
-        - '%'
-        - '{{ ansible_hostname }}'
-
-    - casebox_solr_host: '127.0.0.1'
-    - casebox_solr_port: '8983'
-    - casebox_solr_username: ''
-    - casebox_solr_password: ''
-
-    - casebox_solr_links:
-      - { src: '{{ casebox_root_dir }}var/solr/default', dest: '/var/solr/data/configsets/casebox'}
-      - { src: '{{ casebox_root_dir }}var/solr/log', dest: '/var/solr/data/configsets/casebox_log'}
-
-    - casebox_default_passw_path: '~/.casebox.password chars=ascii_letters'
-    - casebox_default_passw: "{{ lookup('password', 'casebox_default_passw_path') }}"
-
-    # Nginx
-    - nginx_sites:
-      - { src: '/etc/nginx/sites-available/http_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/http_{{ casebox_core }}.conf' }
-      - { src: '/etc/nginx/sites-available/https_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/https_{{ casebox_core }}.conf' }
-
   #
   # Tasks
   #
   tasks:
+    # RSA key
+    - name: 'USER | Generating RSA key for users'
+      user: name={{ item }} generate_ssh_key=yes
+      become: yes
+      with_items: "{{ ssh_users }}"
+
     # Common packages
     - name: "APT | Install common packages."
       apt: pkg={{ item }} state=installed
@@ -141,86 +116,6 @@
       file: path=/etc/nginx/sites-enabled/default state=absent
       become: yes
 
-    - name: "NGINX | Remove Casebox http virtual host."
-      file: path="/etc/nginx/sites-available/http_{{ casebox_core }}.conf" state=absent
-      become: yes
-
-    - name: "NGINX | Add http virtual host."
-      lineinfile: dest="/etc/nginx/sites-available/http_{{ casebox_core }}.conf"
-                  line="{{ item }}"
-                  create=yes
-                  state=present
-                  insertafter=EOF
-      with_items:
-        - "server {"
-        - "    listen 80;\n"
-        - "    server_name {{ casebox_server_name }};"
-        - "    root {{ casebox_htdocs_dir }};"
-        - "    rewrite ^/index\\.php/?(.*)$ /$1 permanent;\n"
-        - "    location / {"
-        - "        index index.php;"
-        - "        try_files $uri @rewriteapp;"
-        - "    }\n"
-        - "    location @rewriteapp { "
-        - "        rewrite ^(.*)$ /index.php/$1 last;"
-        - "    }\n"
-        - "    location ~ ^/(index)\\.php(/|$) {"
-        - "        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;"
-        - "        fastcgi_split_path_info ^(.+\\.php)(/.*)$;"
-        - "        include fastcgi_params;"
-        - "        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;"
-        - "        fastcgi_param  HTTPS off;"
-        - "    }\n"
-        - "    error_log /var/log/nginx/http_{{ casebox_core }}.error.log;"
-        - "    access_log /var/log/nginx/http_{{ casebox_core }}.access.log;"
-        - "}\n"
-      become: yes
-
-    - name: "NGINX | Remove Casebox https virtual host."
-      file: path="/etc/nginx/sites-available/https_{{ casebox_core }}.conf" state=absent
-      become: yes
-
-    - name: "NGINX | Add Casebox https virtual host."
-      lineinfile: dest="/etc/nginx/sites-available/https_{{ casebox_core }}.conf"
-                  line="{{ item }}"
-                  create=yes
-                  state=present
-                  insertafter=EOF
-      with_items:
-        - "server {"
-        - "    listen 443;\n"
-        - "    server_name {{ casebox_server_name }};"
-        - "    root {{ casebox_htdocs_dir }};"
-        - "    rewrite ^/index\\.php/?(.*)$ /$1 permanent;\n"
-        - "    ssl on;"
-        - "    ssl_certificate {{ casebox_root_dir }}var/ssl/ssl-cert.pem;"
-        - "    ssl_certificate_key {{ casebox_root_dir }}var/ssl/ssl-cert.key;\n"
-        - "    location / {"
-        - "        index index.php;"
-        - "        try_files $uri @rewriteapp;"
-        - "    }\n"
-        - "    location @rewriteapp { "
-        - "        rewrite ^(.*)$ /index.php/$1 last;"
-        - "    }\n"
-        - "    location ~ ^/(index)\\.php(/|$) {"
-        - "        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;"
-        - "        fastcgi_split_path_info ^(.+\\.php)(/.*)$;"
-        - "        include fastcgi_params;"
-        - "        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;"
-        - "        fastcgi_param  HTTPS on;"
-        - "    }\n"
-        - "    error_log /var/log/nginx/https_{{ casebox_core }}.error.log;"
-        - "    access_log /var/log/nginx/https_{{ casebox_core }}.access.log;"
-        - "}\n"
-      become: yes
-
-    - name: "NGINX | Enable Casebox virtual hosts."
-      file: src="{{ item.src }}"
-            dest="{{ item.dest }}"
-            state=link
-      with_items: "{{ nginx_sites }}"
-      become: yes
-
     - name: "NGINX | Restart Nginx webserver."
       service: name=nginx state=restarted
       become: yes
@@ -230,6 +125,23 @@
       apt: pkg=redis-server
            update_cache=yes
            state=present
+      become: yes
+
+    # RABBITMQ
+    - name: "RABBITMQ | Adding rabbitmq repository."
+      shell: "echo 'deb http://www.rabbitmq.com/debian/ testing main' | sudo tee /etc/apt/sources.list.d/rabbitmq.list"
+      become: yes
+
+    - name: "RABBITMQ | Obtaining rabbitmq public key."
+      shell: "wget -O- https://www.rabbitmq.com/rabbitmq-signing-key-public.asc | sudo apt-key add -"
+      become: yes
+
+    - name: "RABBITMQ | APT update."
+      shell: 'apt-get update --fix-missing'
+      become: yes
+
+    - name: "RABBITMQ | APT install rabbitmq packages."
+      apt: pkg='rabbitmq-server' state=present
       become: yes
 
     # PHP
@@ -497,223 +409,4 @@
     - name: "SOLR | Install Apache Solr."
       shell: "cd /tmp ; ./install_solr_service.sh {{ solr_ver }}.tgz"
       when: solr_service_status.stat.exists == False
-      become: yes
-
-    # Casebox
-    - name: "CASEBOX | Check casebox directory."
-      stat: path={{ casebox_root_dir }}
-      register: casebox_dir
-      become: yes
-
-    - name: "CASEBOX | Create casebox directory."
-      file: path={{ casebox_root_dir }}
-            state=directory
-            mode=0755
-      when: casebox_dir.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Clone casebox."
-      git: repo={{ casebox_git_url }}
-           dest={{ casebox_root_dir }}
-           version={{ casebox_git_branch }}
-      when: casebox_dir.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-      register: config_file_exist
-
-    - name: "CASEBOX | Check casebox MySQL password."
-      stat: path={{ casebox_db_pass_file }}
-      register: db_pass_file_exist
-
-    - name: "CASEBOX | Generate casebox password."
-      lineinfile: dest="{{ casebox_db_pass_file }}"
-                  line="{{ lookup('pipe', 'openssl rand -hex 10') }}"
-                  create=yes
-                  state=present
-      when: db_pass_file_exist.stat.exists == False and config_file_exist.stat.exists == False
-
-    - name: "CASEBOX | Fetch mysql casebox password."
-      shell: "cat {{ casebox_db_pass_file }}"
-      register: mysql_casebox_password
-      when: config_file_exist.stat.exists == False
-
-    - name: "CASEBOX | Fetch mysql root password."
-      shell: "cat {{ root_db_pass_file }}"
-      register: mysq_root_password
-      when: config_file_exist.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Create databases."
-      mysql_db: name={{ item.db }} login_user=root login_password={{ mysq_root_password.stdout }} state=present
-      with_items: "{{ casebox_db_names }}"
-      when: config_file_exist.stat.exists == False
-
-    - name: "CASEBOX | Grant user permissions."
-      mysql_user: name={{ casebox_db_user }}
-                  host={{ item[0] }}
-                  priv={{ item[1].db }}.*:ALL
-                  append_privs=yes
-                  password={{ mysql_casebox_password.stdout }}
-                  login_user=root
-                  login_password={{ mysq_root_password.stdout }}
-                  state=present
-      with_nested:
-        - "{{ casebox_db_hosts }}"
-        - "{{ casebox_db_names }}"
-      when: config_file_exist.stat.exists == False
-
-    - name: "CASEBOX | Import Casebox databases."
-      mysql_db: name={{ item.db }}
-                login_user=root
-                login_password={{ mysq_root_password.stdout }}
-                target={{ item.file }}
-                state=import
-      with_items: "{{ casebox_db_names }}"
-      when: config_file_exist.stat.exists == False
-
-    - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
-      register: config_file_exist
-
-    - name: "CASEBOX | Creates Solr configsets directory."
-      file: path=/var/solr/data/configsets
-            group=solr
-            owner=solr
-            recurse=yes
-            state=directory
-      when: config_file_exist.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Create Casebox Solr links."
-      file: src={{ item.src }}
-            dest={{ item.dest }}
-            group=solr
-            owner=solr
-            state=link
-      with_items: "{{ casebox_solr_links }}"
-      when: config_file_exist.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-      register: config_file_exist
-
-    - name: "CASEBOX | Check casebox MySQL password."
-      stat: path={{ casebox_db_pass_file }}
-      register: db_pass_file_exist
-
-    - name: "CASEBOX | Fetch casebox MySQL password."
-      shell: "cat {{ casebox_db_pass_file }}"
-      register: mysql_casebox_password
-      when: db_pass_file_exist.stat.exists == True
-
-    - name: "CASEBOX | Check casebox parameters.yml file."
-      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-      register: stat_config_file
-
-    - name: "CASEBOX | Create casebox config_*.yml file."
-      file: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
-            state=touch
-      when: stat_config_file.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Populate casebox core config."
-      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
-      with_items:
-        - 'imports:'
-        - "    - { resource: {{ casebox_core }}/parameters.yml }"
-        - '    - { resource: config.yml }'
-      when: stat_config_file.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Create casebox parameters file."
-      file: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-            state=touch
-      when: stat_config_file.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Populate casebox parameters."
-      shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-      with_items:
-        - '# This file is auto-generated during the composer install'
-        - 'parameters:'
-        - "    core_name: {{ casebox_core }}"
-        - '    locale: en'
-        - '    server_name: http://192.168.33.3.xip.io/'
-        - '    db_host: 127.0.0.1'
-        - '    db_port: 3306'
-        - "    db_name: {{ casebox_core }}"
-        - "    db_user: {{ casebox_db_user }}"
-        - "    db_pass: {{ mysql_casebox_password.stdout }}"
-        - "    solr_host: {{ casebox_solr_host }}"
-        - "    solr_port: {{ casebox_solr_port }}"
-        - "    solr_core: {{ casebox_core }}"
-        - "    solr_core_log: {{ casebox_core }}_log"
-        - "    solr_username: {{ casebox_solr_username }}"
-        - "    solr_password: {{ casebox_solr_password }}"
-        - '    session.lifetime: 4320'
-        - '    admin_email: admin@example.com'
-        - '    sender_email: emails.sender@example.com'
-        - '    comments_pass:'
-        - '    mailer_transport: smtp'
-        - '    mailer_host: 127.0.0.1'
-        - '    mailer_user: null'
-        - '    mailer_password: null'
-        - "    secret: {{ lookup('pipe', 'openssl rand -hex 13') }}"
-        - '    prefix: cb'
-        - '    solr_schema: http'
-        - "    convert_doc_unoconv_cmd: /usr/bin/python3 /usr/bin/unoconv"
-        - "    convert_doc_url: http://convert.devops.site/document/convert"
-        - '    converter: unoconv'
-        - '    redis_host: 127.0.0.1'
-        - '    redis_port: 6379'
-      when: config_file_exist.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Check casebox default parameters file."
-      stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
-      become: yes
-      register: stat_default_parameters_file
-
-    - name: "CASEBOX | Populate default parameters file."
-      copy: src="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-            dest="{{ casebox_root_dir }}app/config/default/parameters.yml"
-      when: stat_default_parameters_file.stat.exists == False
-      become: yes
-
-    - name: "CASEBOX | Set vagrant:vagrant owner for docroot."
-      shell: "chown vagrant:vagrant {{ casebox_root_dir }} -R"
-      become: yes
-
-    - name: "CASEBOX | Set 0777 permissions to var/ folder."
-      shell: "chmod 0777 {{ casebox_root_dir }}var/ -R"
-      become: yes
-
-    - name: "CASEBOX | Composer update."
-      shell: "composer update --working-dir={{ casebox_root_dir }}"
-
-    - name: "CASEBOX | Solr create Casebox default core."
-      shell: "{{ casebox_root_dir }}bin/console casebox:solr:create --env={{ casebox_core }}"
-      ignore_errors: yes
-
-    - name: "CASEBOX | Solr index Casebox default core."
-      shell: "{{ casebox_root_dir }}bin/console casebox:solr:update --all=true --env={{ casebox_core }}"
-      ignore_errors: yes
-
-    - name: "CASEBOX | Clear cache."
-      shell: "{{ casebox_root_dir }}bin/console ca:cl --env={{ casebox_core }}"
-
-    - name: "CASEBOX | Update Casebox database schema."
-      shell: "{{ casebox_root_dir }}bin/console doctrine:schema:update --force"
-
-    - name: "CASEBOX | Add Casebox assests."
-      shell: "{{ casebox_root_dir }}bin/console casebox:min:assets --env={{ casebox_core }}"
-
-    - name: "CASEBOX | Set www-data:www-data owner for var/cache, files directories."
-      shell: "chown www-data:www-data {{ casebox_root_dir }}var/{{ item }} -R"
-      with_items:
-        - 'cache'
-        - 'files'
       become: yes

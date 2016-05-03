@@ -5,7 +5,7 @@ opts = GetoptLong.new(
   [ '--provision', GetoptLong::OPTIONAL_ARGUMENT ],
 )
 
-env=''
+env='prod'
 
 opts.each do |opt, arg|
   case opt
@@ -25,6 +25,7 @@ Vagrant.configure(2) do |config|
     config.ssh.forward_agent = true
 
     config.vm.provider 'virtualbox' do |vb|
+        vb.name = 'casebox'
         vb.memory = '2048'
     end
 
@@ -38,12 +39,19 @@ Vagrant.configure(2) do |config|
 
     config.vm.provision 'shell', inline: <<-SHELL, privileged: false
         echo "================================================================";
-        echo "Installing Casebox and main software...";
+        echo "Installing (core software) Nginx, PHP, MySQL, LibreOffice etc...";
         echo "================================================================";
         ansible-playbook -i "localhost," -c local /var/provision/ansible/default.yml
     SHELL
 
-    if ENV['ENV'] == 'dev'
+    config.vm.provision 'shell', inline: <<-SHELL, privileged: false
+        echo "================================================================";
+        echo "Installing Casebox Admin UI...";
+        echo "================================================================";
+        ansible-playbook -i "localhost," -c local /var/provision/ansible/dashboard.yml
+    SHELL
+
+    if env == 'dev'
         config.vm.provision 'shell', inline: <<-SHELL, privileged: false
             echo "================================================================";
             echo "Installing SAMBA...";
@@ -63,7 +71,7 @@ Vagrant.configure(2) do |config|
         echo "================================================================";
         echo " ";
         echo " ";
-        echo "Launch Casebox URL: http://192.168.33.3.xip.io/c/default";
+        echo "Launch Casebox Admin UI: http://192.168.33.3:8000";
         echo " ";
         echo " ";
         echo "================================================================";

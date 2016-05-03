@@ -1,0 +1,83 @@
+#
+# File: ecryptfs.yml
+# Description: Setup cryptfs.
+# Tags: install, mount, umount
+#
+---
+
+- hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    - passphrase: "{{ passphrase }}"
+    - mount_folders:
+        - '/var/www/casebox/'
+    - encrypted_root: '/var/www/casebox'
+    - sig_file: '/root/.ecryptfs/sig-cache.txt'
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: 'USER | Add root user to fuse group.'
+      shell: "adduser root fuse"
+      become: yes
+      tags:
+        - install
+
+    - name: 'USER | Add root user to fuse group.'
+      shell: "mkdir -p {{ item }}"
+      with_items: "{{ mount_folders }}"
+      become: yes
+      ignore_errors: true
+      tags:
+        - install
+
+    # Umount
+#    - name: 'ECRYPTFS | Umount data drive.'
+#      shell: "umount {{ item }}"
+#      with_items: "{{ mount_folders }}"
+#      become: yes
+#      ignore_errors: true
+#      tags:
+#        - umount
+
+    # Mount
+    - name: 'ECRYPTFS | Check for already mounted encrypted drive'
+      shell: grep '{{ encrypted_root }} ecryptfs' /etc/mtab
+      register: mtab_contents
+      failed_when: false
+      changed_when: false
+      become: yes
+      tags:
+        - mount
+
+    - name: 'ECRYPTFS | Add tokens into user session keyring.'
+      shell: 'printf "%s" "{{ passphrase }}" | ecryptfs-add-passphrase | grep -o "\[.*\]" | sed "s/\[//g;s/\]//g"'
+      register: password_hash
+      become: yes
+      tags:
+        - mount
+
+    - name: "ECRYPTFS | Create sig-cache file."
+      file: path="{{ sig_file }}" state=touch
+      become: yes
+      tags:
+        - mount
+
+    - name: "ECRYPTFS | Populate sig-cache file."
+      shell: "echo '{{ item }}' >> {{ sig_file }}"
+      with_items:
+        - "{{ password_hash.stdout }}"
+      become: yes
+      tags:
+        - mount
+
+    - name: 'ECRYPTFS | Mount data drive.'
+      shell: "mount -t ecryptfs -o 'key=passphrase:passphrase_passwd={{ passphrase }},user,noauto,ecryptfs_passthrough=no,ecryptfs_cipher=aes,ecryptfs_key_bytes=32,ecryptfs_unlink_sigs,ecryptfs_enable_filename_crypto=y,ecryptfs_fnek_sig={{ password_hash.stdout }},verbosity=1' {{ encrypted_root }}/ {{ encrypted_root }}/"
+      when: "'{{ encrypted_root }}' not in mtab_contents.stdout"
+      become: yes
+      tags:
+        - mount

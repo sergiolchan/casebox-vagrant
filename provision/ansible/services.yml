@@ -15,6 +15,8 @@
         - 'nginx'
         - 'solr'
         - 'unoconvd'
+    - app_env: 'prod'
+    - app_root_dir: '/var/www/casebox-admin'
 
   #
   # Tasks
@@ -23,4 +25,25 @@
     - name: "SOLR | Restart services."
       shell: "service {{ item }} restart"
       with_items: "{{ services }}"
+      become: yes
+
+    # Dashboard app start services
+    - name: "APP | Stop dashboard as webserver."
+      shell: "{{ app_root_dir }}/bin/console server:stop 0.0.0.0:8000 --env={{ app_env }}"
+      ignore_errors: yes
+      become: yes
+
+    - name: "APP | Run dashboard as webserver."
+      shell: "{{ app_root_dir }}/bin/console server:start 0.0.0.0:8000 --env={{ app_env }}"
+      ignore_errors: yes
+      become: yes
+
+    - name: "APP | Stop queue."
+      shell: "{{ app_root_dir }}/bin/console app:queue:stop --env={{ app_env }}"
+      ignore_errors: yes
+      become: yes
+
+    - name: "APP | Run queue in background."
+      shell: "{{ app_root_dir }}/bin/console app:queue:start --env={{ app_env }}"
+      ignore_errors: yes
       become: yes
