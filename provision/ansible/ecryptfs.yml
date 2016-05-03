@@ -26,14 +26,6 @@
       tags:
         - install
 
-    - name: 'USER | Add root user to fuse group.'
-      shell: "mkdir -p {{ item }}"
-      with_items: "{{ encrypted_root }}"
-      become: yes
-      ignore_errors: true
-      tags:
-        - install
-
     # Umount
 #    - name: 'ECRYPTFS | Umount data drive.'
 #      shell: "umount {{ item }}"
@@ -44,6 +36,14 @@
 #        - umount
 
     # Mount
+    - name: 'USER | Add root user to fuse group.'
+      shell: "mkdir -p {{ item }}"
+      with_items: "{{ encrypted_root }}"
+      become: yes
+      ignore_errors: true
+      tags:
+        - mount
+
     - name: 'ECRYPTFS | Check for already mounted encrypted drive'
       shell: grep '{{ encrypted_root }} ecryptfs' /etc/mtab
       register: mtab_contents
