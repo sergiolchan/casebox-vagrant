@@ -73,7 +73,7 @@
         - mount
 
     - name: "ECRYPTFS | Populate sig-cache file."
-      shell: "echo '{{ item }}' >> {{ sig_file }}"
+      shell: "echo '{{ item }}' > {{ sig_file }}"
       with_items:
         - "{{ password_hash.stdout }}"
       become: yes
@@ -86,3 +86,12 @@
       become: yes
       tags:
         - mount
+
+#    - name: 'ECRYPTFS | Check for mounted encrypted drive'
+#      shell: grep '{{ encrypted_root }} ecryptfs' /etc/mtab
+#      register: mtab_contents
+#      failed_when: false
+#      changed_when: false
+#      become: yes
+#      tags:
+#        - mount

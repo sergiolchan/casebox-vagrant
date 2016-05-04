@@ -10,10 +10,6 @@
   # Variables
   #
   vars:
-    - ssh_users:
-        - 'vagrant'
-        - 'root'
-
     # Common software
     - common_packages:
         - 'git'
@@ -71,11 +67,39 @@
   # Tasks
   #
   tasks:
-    # RSA key
-    - name: 'USER | Generating RSA key for users'
-      user: name={{ item }} generate_ssh_key=yes
+    # RSA keys
+    - name: 'USER | Check root RSA key.'
+      stat: path="/root/.ssh/id_rsa"
+      register: id_rsa_root
       become: yes
-      with_items: "{{ ssh_users }}"
+
+    - name: 'USER | Generating RSA key for root user.'
+      shell: "ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ''"
+      when: id_rsa_root.stat.exists == False
+      become: yes
+
+    - name: 'USER | Add RSA key to root authorized_keys.'
+      shell: "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+      when: id_rsa_root.stat.exists == False
+      become: yes
+
+    - name: 'USER | Add RSA key to vagrant authorized_keys.'
+      shell: "cat /root/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys"
+      when: id_rsa_root.stat.exists == False
+      become: yes
+
+    - name: 'USER | Check vagrant RSA key.'
+      stat: path="/home/vagrant/.ssh/id_rsa"
+      register: id_rsa_vagrant
+      become: yes
+
+    - name: 'USER | Generating RSA key for root user.'
+      shell: "ssh-keygen -b 2048 -t rsa -f /home/vagrant/.ssh/id_rsa -q -N ''"
+      when: id_rsa_vagrant.stat.exists == False
+
+    - name: 'USER | Add RSA key to vagrant authorized_keys.'
+      shell: "cat /home/vagrant/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys"
+      when: id_rsa_vagrant.stat.exists == False
 
     # Common packages
     - name: "APT | Install common packages."
