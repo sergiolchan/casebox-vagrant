@@ -42,11 +42,15 @@ Vagrant box host/ip: 192.168.33.3.xip.io / 192.168.33.3
 Links
 -----
 
-Casebox v1 instance: [http://192.168.33.3.xip.io/default](http://192.168.33.3.xip.io/default)
+Casebox Admin UI: [http://192.168.33.3:8000/](http://192.168.33.3:8000)
 
-Casebox v2 instance: [http://192.168.33.3.xip.io/c/default](http://192.168.33.3.xip.io/c/default)
+Solr admin interface: [http://192.168.33.3:8983/solr/#/](http://192.168.33.3:8983/solr/#/)
 
-Solr admin interface: [http://192.168.33.3.xip.io:8983/solr/#/](http://192.168.33.3.xip.io:8983/solr/#/)
+
+Admin UI
+--------
+
+In order to create Casebox cores (environments), read the [documentation](https://docs.google.com/document/d/1a6C7vMj3OJ8yVobiAel6SisojaDAtB1Z1W58rdrC4kc)
 
 
 Credentials
