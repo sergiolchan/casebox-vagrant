@@ -1,20 +1,3 @@
-require 'getoptlong'
-
-opts = GetoptLong.new(
-  [ '-f', GetoptLong::OPTIONAL_ARGUMENT ],
-  [ '--env', GetoptLong::OPTIONAL_ARGUMENT ],
-  [ '--provision', GetoptLong::OPTIONAL_ARGUMENT ],
-)
-
-env='prod'
-
-opts.each do |opt, arg|
-  case opt
-    when '--env'
-      env=arg
-  end
-end
-
 Vagrant.configure(2) do |config|
     config.vm.box = 'ubuntu/trusty32'
     config.vm.hostname = 'casebox.org'
@@ -33,7 +16,7 @@ Vagrant.configure(2) do |config|
 
     config.vm.provision 'shell', inline: <<-SHELL, privileged: true
         echo "================================================================================";
-        echo "Installing common software...";
+        echo "Installing common software (ansible, git, nano, wget, curl etc.)...";
         echo "================================================================================";
         chmod +x /var/provision/bash/preinstall.sh
         source /var/provision/bash/preinstall.sh
@@ -53,18 +36,9 @@ Vagrant.configure(2) do |config|
         ansible-playbook -i "localhost," -c local /var/provision/ansible/dashboard.yml
     SHELL
 
-    if env == 'dev'
-        config.vm.provision 'shell', inline: <<-SHELL, privileged: false
-            echo "================================================================================";
-            echo "Installing SAMBA...";
-            echo "================================================================================";
-            ansible-playbook -i "localhost," -c local /var/provision/ansible/sharing/casebox.yml
-        SHELL
-    end
-
     config.vm.provision 'shell', run: 'always', inline: <<-SHELL, privileged: false
         echo "================================================================================";
-        echo "Restart vagrant services...";
+        echo "Restart Casebox Admin UI services...";
         echo "================================================================================";
         ansible-playbook -i "localhost," -c local /var/provision/ansible/services.yml
     SHELL

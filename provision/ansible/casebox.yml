@@ -203,7 +203,7 @@
         - install
 
     - name: 'MYSQL | Disable autostart.'
-      replace: dest='/etc/init/mysql.conf' regexp='^start on runlevel [2345]$' replace='#start on runlevel [2345]'
+      replace: dest='/etc/init/mysql.conf' regexp='^start on runlevel \[2345\]$' replace='#start on runlevel [2345]'
       become: yes
       tags:
         - install

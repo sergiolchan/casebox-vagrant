@@ -24,8 +24,6 @@ Navigate to `/path/to/casebox` directory.
 
 Run vagrant (virtualbox) machine: `vagrant up`
 
-For development mode run: `vagrant --env=dev up`
-
 
 Vagrant (virtualbox) ssh access
 -------------------------------
@@ -79,9 +77,9 @@ Update vagrant (virtualbox) machine: `vagrant reload --provision`
 For developers
 --------------
 
-Run vagrant (virtualbox) machine: `vagrant --env=dev up`
+Run vagrant (virtualbox) machine: `vagrant up`
 
-Provision vagrant (virtualbox) machine: `vagrant --env=dev provision`
+Open Casebox Admin UI [http://192.168.33.3:8000/admin/share](http://192.168.33.3:8000/admin/share) and share Casebox files.
 
 Mount Casebox sources from VirtualBox into your host machine `//192.168.33.3/casebox` 
 (for Windows: `\\192.168.33.3\casebox`) via SAMBA.
@@ -94,8 +92,4 @@ Now you will be able to edit Casebox files from your favorite IDE.
 Issues
 ------
 
-*   Issue: "It appears your machine doesn't support NFS, or there is not an adapter to enable NFS on this machine for Vagrant"
-    
-    Fix: Run 'apt-get install nfs-kernel-server' command. (https://help.ubuntu.com/community/SettingUpNFSHowTo)
-    
-    OS: Gnu/Linux
+-- TBD
