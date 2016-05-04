@@ -4,7 +4,6 @@ Vagrant.configure(2) do |config|
     config.vm.network 'private_network', ip: '192.168.33.3'
 
     config.vm.synced_folder '.', '/vagrant', disabled: true
-
     config.vm.synced_folder './provision', '/var/provision', :nfs => { :mount_options => ['fmode=666'] }
 
     config.ssh.forward_agent = true
