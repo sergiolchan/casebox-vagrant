@@ -10,8 +10,6 @@
   # Variables
   #
   vars:
-    - services:
-        - 'unoconvd'
     - app_env: 'prod'
     - app_root_dir: '/var/www/casebox-admin'
 
@@ -19,20 +17,6 @@
   # Tasks
   #
   tasks:
-#    - name: "SERVICE | Restart services."
-#      shell: "service {{ item }} restart"
-#      with_items: "{{ services }}"
-#      ignore_errors: yes
-#      become: yes
-
-    # Dashboard app start services
-#    - name: 'APP | Check dashboard webserver.'
-#      shell: ps -aux | grep '/usr/bin/php7.0 -S 0.0.0.0:8000' -c
-#      register: dashboard_webserver
-#      failed_when: false
-#      changed_when: false
-#      become: yes
-
     - name: "APP | Stop dashboard webserver."
       shell: "php {{ app_root_dir }}/bin/console server:stop 0.0.0.0:8000 --env={{ app_env }}"
       ignore_errors: yes
@@ -43,13 +27,6 @@
       ignore_errors: yes
       become: yes
 
-#    - name: 'APP | Check dashboard queue.'
-#      shell: ps -aux | grep 'app:queue:start' -c
-#      register: dashboard_queue
-#      failed_when: false
-#      changed_when: false
-#      become: yes
-
     - name: "APP | Stop queue."
       shell: "php {{ app_root_dir }}/bin/console app:queue:stop"
       ignore_errors: yes
@@ -59,8 +36,3 @@
       shell: "php {{ app_root_dir }}/bin/console app:queue:start"
       ignore_errors: yes
       become: yes
-
-#    - name: "APP | Run queue in background."
-#      shell: "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@127.0.0.1 \"php /var/www/casebox-admin/bin/console app:queue:start > /dev/null\""
-#      ignore_errors: yes
-#

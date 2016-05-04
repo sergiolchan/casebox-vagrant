@@ -27,16 +27,21 @@
         - install
 
     # Umount
-#    - name: 'ECRYPTFS | Umount data drive.'
-#      shell: "umount {{ item }}"
-#      with_items: "{{ encrypted_root }}"
-#      become: yes
-#      ignore_errors: true
-#      tags:
-#        - umount
+    - name: 'ECRYPTFS | Umount data drive.'
+      shell: "umount {{ encrypted_root }}"
+      become: yes
+      ignore_errors: true
+      tags:
+        - umount
 
     # Mount
-    - name: 'USER | Add root user to fuse group.'
+    - name: 'USER | Create directory.'
+      replace: dest='/etc/pam.d/sshd' regexp='^session    optional     pam_keyinit.so force revoke$' replace='session    optional     pam_keyinit.so'
+      become: yes
+      tags:
+        - mount
+
+    - name: 'USER | Create directory.'
       shell: "mkdir -p {{ item }}"
       with_items: "{{ encrypted_root }}"
       become: yes
@@ -87,11 +92,44 @@
       tags:
         - mount
 
-#    - name: 'ECRYPTFS | Check for mounted encrypted drive'
-#      shell: grep '{{ encrypted_root }} ecryptfs' /etc/mtab
-#      register: mtab_contents
-#      failed_when: false
-#      changed_when: false
-#      become: yes
-#      tags:
-#        - mount
+    - name: 'STAT | Check mysql file.'
+      stat: path='/var/lib/mysql/debian-5.5.flag'
+      register: stat_mysql
+      become: yes
+      tags:
+        - mount
+
+    - name: 'SERVICE | Restart MySQL.'
+      shell: 'service mysql restart'
+      when: stat_mysql.stat.exists == True
+      become: yes
+      tags:
+        - mount
+
+    - name: 'STAT | Check solr file.'
+      stat: path='/var/solr/data/solr.xml'
+      register: stat_solr
+      become: yes
+      tags:
+        - mount
+
+    - name: 'SERVICE | Restart Solr.'
+      shell: 'service solr restart'
+      when: stat_solr.stat.exists == True
+      become: yes
+      tags:
+        - mount
+
+    - name: 'STAT | Check /var/www/casebox/web/index.php file.'
+      stat: path='/var/www/casebox/web/index.php'
+      register: stat_index
+      become: yes
+      tags:
+        - mount
+
+    - name: 'SERVICE | Restart Nginx.'
+      shell: 'service nginx restart'
+      when: stat_index.stat.exists == True
+      become: yes
+      tags:
+        - mount
