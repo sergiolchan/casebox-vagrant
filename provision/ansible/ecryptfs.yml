@@ -36,12 +36,6 @@
 
     # Mount
     - name: 'USER | Create directory.'
-      replace: dest='/etc/pam.d/sshd' regexp='^session    optional     pam_keyinit.so force revoke$' replace='session    optional     pam_keyinit.so'
-      become: yes
-      tags:
-        - mount
-
-    - name: 'USER | Create directory.'
       shell: "mkdir -p {{ item }}"
       with_items: "{{ encrypted_root }}"
       become: yes

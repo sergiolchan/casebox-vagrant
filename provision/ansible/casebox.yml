@@ -202,6 +202,12 @@
       tags:
         - install
 
+    - name: 'MYSQL | Disable autostart.'
+      replace: dest='/etc/init/mysql.conf' regexp='^start on runlevel [2345]$' replace='#start on runlevel [2345]'
+      become: yes
+      tags:
+        - install
+
     - name: "MYSQL | Update MySQL configuration file."
       lineinfile: dest='/etc/mysql/my.cnf' line="{{ item }}" create=yes
       with_items:
@@ -238,12 +244,6 @@
         - '[mysql]'
         - '[isamchk]'
         - 'key_buffer=16M'
-      become: yes
-      tags:
-        - install
-
-    - name: "MYSQL | Restart MySQL server."
-      service: name=mysql state=restarted
       become: yes
       tags:
         - install

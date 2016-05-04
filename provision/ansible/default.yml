@@ -315,3 +315,11 @@
     - name: "UNOCONV | Restart unoconv."
       service: name=unoconvd state=running
       become: true
+
+    # sshd
+    - name: 'SSHD | Fix session pam_keyinit.'
+      replace: dest='/etc/pam.d/sshd' regexp='^session    optional     pam_keyinit.so force revoke$' replace='session    optional     pam_keyinit.so'
+      become: yes
+
+    - name: 'FILE | Reload needed.'
+      file: path="/home/vagrant/.reload" state=touch
