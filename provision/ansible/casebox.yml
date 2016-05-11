@@ -27,7 +27,7 @@
     - casebox_default_email: 'admin@example.com'
 
     - casebox_git_url: 'https://github.com/KETSE/casebox.git'
-    - casebox_git_branch: 'v2'
+    - casebox_git_branch: 'master'
 
     - casebox_db_user: "{{ casebox_core }}"
     - casebox_db_pass_file: '~/.mysql.casebox.password'
