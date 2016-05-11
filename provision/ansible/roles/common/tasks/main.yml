@@ -18,3 +18,5 @@
     - curl
     - nano
     - sendmail
+    - mailutils
+    - dos2unix
