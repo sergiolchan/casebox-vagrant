@@ -36,7 +36,7 @@ casebox_root_dir: /var/www/html/casebox/
 casebox_htdocs_dir: /var/www/html/casebox/httpsdocs
 
 casebox_git_url: https://github.com/KETSE/casebox.git
-casebox_git_branch: devel
+casebox_git_branch: v1
 
 casebox_core: casebox
 
