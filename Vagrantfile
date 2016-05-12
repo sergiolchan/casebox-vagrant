@@ -11,6 +11,12 @@ Vagrant.configure(2) do |config|
     config.vm.provider 'virtualbox' do |vb|
         vb.name = 'casebox'
         vb.memory = '2048'
+        vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+        vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
+    end
+
+    if Vagrant.has_plugin?('vagrant-vbguest') then
+        config.vbguest.auto_update = false
     end
 
     config.vm.provision 'shell', inline: <<-SHELL, privileged: true
