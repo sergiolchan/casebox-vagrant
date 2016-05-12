@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 echo -e "\n[*] Run update command.\n"
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
 apt-get update --fix-missing;
 echo -e "\n[*] Install python-pip, python-dev, git, curl, wget, nano.\n"
 apt-get install -y python-pip python-dev git curl wget nano;
