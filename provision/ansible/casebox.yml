@@ -396,6 +396,14 @@
       tags:
         - install
 
+    - name: "CASEBOX | Create /var/solr/data/configsets directory."
+      shell: "mkdir -p /var/solr/data/configsets"
+      when: solr_lock.stat.exists == False
+      ignore_errors: yes
+      become: yes
+      tags:
+        - install
+
     - name: "CASEBOX | Create Casebox Solr links."
       file: src={{ item.src }}
             dest={{ item.dest }}
