@@ -29,7 +29,7 @@
     - casebox_git_branch: 'master'
 
     - casebox_db_user: "{{ casebox_core }}"
-    - casebox_db_pass_file: '~/.mysql.casebox.password'
+    - casebox_db_pass_file: '~/.mysql.{{ casebox_core }}.password'
     - casebox_db_names:
       - { db: '{{ casebox_core }}', file: '{{ casebox_root_dir }}var/backup/cb_default.sql'}
     - casebox_db_hosts:
