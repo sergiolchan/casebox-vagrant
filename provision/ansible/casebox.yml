@@ -396,6 +396,18 @@
       tags:
         - install
 
+    - name: "CASEBOX | Create Casebox Solr links."
+      file: src={{ item.src }}
+            dest={{ item.dest }}
+            group=solr
+            owner=solr
+            state=link
+      with_items: "{{ casebox_solr_links }}"
+      when: solr_lock.stat.exists == False
+      become: yes
+      tags:
+        - install
+
     - name: "CASEBOX | Creates Solr configsets directory."
       file: path='/var/solr/data/configsets'
             group=solr
@@ -494,7 +506,7 @@
       tags:
         - install
 
-    - name: "CASEBOX | Check casebox default parameters file."
+    - name: "CASEBOX | Check default parameters file."
       stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
       become: yes
       register: stat_default_parameters_file

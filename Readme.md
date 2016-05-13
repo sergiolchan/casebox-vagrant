@@ -60,7 +60,7 @@ login to vagrant box using 'vagrant ssh' command.
 After that use 'cat' command to list the following files with credentials:
 
 * MySQL `root` password in file: `/root/.mysql.root.password`
-* MySQL `casebox` password in file: `/home/vagrant/.mysql.casebox.password`
+* MySQL `<core name>` password in file: `/home/vagrant/.mysql.<core name>.password`
 * Casebox default `root` user password: `a`
 
 
