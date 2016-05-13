@@ -434,6 +434,14 @@
       tags:
         - install
 
+    - name: "CASEBOX | Create config_{core-name}.yml file."
+      file: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
+            state=touch
+      when: stat_core_config.stat.exists == False
+      become: yes
+      tags:
+        - install
+
     - name: "CASEBOX | Populate config_{core-name}.yml file."
       shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
       with_items:
