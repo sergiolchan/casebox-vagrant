@@ -402,27 +402,14 @@
             owner=solr
             recurse=yes
             state=directory
-      when: config_file_exist.stat.exists == False and solr_lock.stat.exists == False
+      when: solr_lock.stat.exists == False
       become: yes
       tags:
         - install
 
     - name: "CASEBOX | Create Casebox Solr links."
-      file: src={{ item.src }}
-            dest={{ item.dest }}
-            group=solr
-            owner=solr
-            state=link
-      with_items: "{{ casebox_solr_links }}"
-      when: config_file_exist.stat.exists == False and solr_lock.stat.exists == False
-      become: yes
-      tags:
-        - install
-
-    - name: "CASEBOX | Create casebox config_*.yml file."
-      file: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
-            state=touch
-      when: config_file_exist.stat.exists == False
+      shell: "echo 'installed' >> ~/.solr.lock"
+      when: solr_lock.stat.exists == False
       become: yes
       tags:
         - install
