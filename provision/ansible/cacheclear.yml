@@ -1,0 +1,23 @@
+#
+# File: cacheclear.yml
+# Description: Perform cache clear.
+#
+---
+
+- hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    - casebox_core: "{{ casebox_core }}"
+    - casebox_root_dir: '/var/www/casebox'
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "CASEBOX | Clear cache."
+      shell: "rm -r {{ casebox_root_dir }}/var/cache/{{ casebox_core }}"
+      become: yes
+
