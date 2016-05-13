@@ -29,7 +29,7 @@
       when: smbconf.stat.exists == False
       become: yes
 
-    - name: "SHELL | Populate smb.conf file."
+    - name: "SHELL | Populate smb.conf file [global] section."
       shell: "echo '{{ item }}' >> /etc/samba/smb.conf"
       with_items:
         - '[global]'
@@ -40,6 +40,12 @@
         - '   syslog = 0'
         - '   panic action = /usr/share/samba/panic-action.%d'
         - '   server role = standalone'
+      when: smbconf.stat.exists == False
+      become: yes
+
+    - name: "SHELL | Populate smb.conf file [dashboard] section."
+      shell: "echo '{{ item }}' >> /etc/samba/smb.conf"
+      with_items:
         - '[dashboard]'
         - '   comment = Share casebox-admin directory'
         - '   path = /var/www/casebox-admin'
@@ -47,6 +53,7 @@
         - '   read only = no'
         - '   guest ok = no'
         - '   valid users = vagrant'
+      when: smbconf.stat.exists == True
       become: yes
 
     - name: "SHELL | Backup smb.conf file."

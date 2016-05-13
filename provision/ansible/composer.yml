@@ -17,6 +17,12 @@
   # Tasks
   #
   tasks:
+    - name: "APP | Update Casebox sources."
+      shell: "cd {{ casebox_root_dir }}/; git pull origin master;"
+      become: yes
+      tags:
+        - update
+
     - name: "CASEBOX | Composer update."
       shell: "composer update --working-dir={{ casebox_root_dir }}"
       become: yes

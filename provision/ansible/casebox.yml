@@ -24,7 +24,6 @@
     - casebox_core: "{{ casebox_core }}"
     - casebox_root_dir: '/var/www/casebox/'
     - casebox_htdocs_dir: '/var/www/casebox/web'
-    - casebox_default_email: 'admin@example.com'
 
     - casebox_git_url: 'https://github.com/KETSE/casebox.git'
     - casebox_git_branch: 'master'
@@ -183,12 +182,6 @@
       tags:
         - install
 
-    - name: "NGINX | Restart Nginx webserver."
-      service: name=nginx state=restarted
-      become: yes
-      tags:
-        - install
-
     # MySQL
     - name: "MYSQL | Install MySQL packages."
       apt: pkg="{{ item }}"
@@ -204,6 +197,20 @@
 
     - name: 'MYSQL | Disable autostart.'
       replace: dest='/etc/init/mysql.conf' regexp='^start on runlevel \[2345\]$' replace='#start on runlevel [2345]'
+      become: yes
+      tags:
+        - install
+
+    - name: "MYSQL | Check MySQL .mysql.cnf.lock file."
+      stat: path='~/.mysql.cnf.lock'
+      register: mysql_cnf_lock
+      become: yes
+      tags:
+        - install
+
+    - name: "MYSQL | Add MySQL .mysql.cnf.lock file."
+      file: path="~/.mysql.cnf.lock" state=touch
+      when: mysql_cnf_lock.stat.exists == False
       become: yes
       tags:
         - install
@@ -245,6 +252,7 @@
         - '[isamchk]'
         - 'key_buffer=16M'
       become: yes
+      when: mysql_cnf_lock.stat.exists == False
       tags:
         - install
 
@@ -381,9 +389,10 @@
       tags:
         - install
 
-    - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/default/parameters.yml"
-      register: config_file_exist
+    - name: "CASEBOX | Check .solr.lock file."
+      stat: path='~/.solr.lock'
+      register: solr_lock
+      become: yes
       tags:
         - install
 
@@ -393,7 +402,7 @@
             owner=solr
             recurse=yes
             state=directory
-      when: config_file_exist.stat.exists == False
+      when: config_file_exist.stat.exists == False and solr_lock.stat.exists == False
       become: yes
       tags:
         - install
@@ -405,51 +414,33 @@
             owner=solr
             state=link
       with_items: "{{ casebox_solr_links }}"
-      when: config_file_exist.stat.exists == False
+      when: config_file_exist.stat.exists == False and solr_lock.stat.exists == False
       become: yes
-      tags:
-        - install
-
-    - name: "CASEBOX | Check casebox config file."
-      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-      register: config_file_exist
-      tags:
-        - install
-
-    - name: "CASEBOX | Check casebox MySQL password."
-      stat: path={{ casebox_db_pass_file }}
-      register: db_pass_file_exist
-      tags:
-        - install
-
-    - name: "CASEBOX | Fetch casebox MySQL password."
-      shell: "cat {{ casebox_db_pass_file }}"
-      register: mysql_casebox_password
-      when: db_pass_file_exist.stat.exists == True
-      tags:
-        - install
-
-    - name: "CASEBOX | Check casebox parameters.yml file."
-      stat: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
-      register: stat_config_file
       tags:
         - install
 
     - name: "CASEBOX | Create casebox config_*.yml file."
       file: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
             state=touch
-      when: stat_config_file.stat.exists == False
+      when: config_file_exist.stat.exists == False
       become: yes
       tags:
         - install
 
-    - name: "CASEBOX | Populate config."
+    - name: "CASEBOX | Check config_{core-name}.yml file."
+      stat: path="{{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
+      register: stat_core_config
+      become: yes
+      tags:
+        - install
+
+    - name: "CASEBOX | Populate config_{core-name}.yml file."
       shell: "echo '{{ item }}' >> {{ casebox_root_dir }}app/config/config_{{ casebox_core }}.yml"
       with_items:
         - 'imports:'
         - "    - { resource: {{ casebox_core }}/parameters.yml }"
         - '    - { resource: config.yml }'
-      when: stat_config_file.stat.exists == False
+      when: stat_core_config.stat.exists == False
       become: yes
       tags:
         - install
@@ -463,7 +454,7 @@
     - name: "CASEBOX | Create casebox parameters file."
       file: path="{{ casebox_root_dir }}app/config/{{ casebox_core }}/parameters.yml"
             state=touch
-      when: stat_config_file.stat.exists == False
+      when: config_file_exist.stat.exists == False
       become: yes
       tags:
         - install
