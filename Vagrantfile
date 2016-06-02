@@ -43,7 +43,7 @@ Vagrant.configure(2) do |config|
 
     config.vm.provision 'shell', run: 'always', inline: <<-SHELL, privileged: false
         echo "================================================================================";
-        echo "Restart Casebox Admin UI services...";
+        echo "Starting Casebox Admin UI services...";
         echo "================================================================================";
         ansible-playbook -i "localhost," -c local /var/provision/ansible/services.yml
     SHELL
