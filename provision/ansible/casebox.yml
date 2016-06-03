@@ -57,8 +57,8 @@
       - { src: '/etc/nginx/sites-available/https_{{ casebox_core }}.conf', dest: '/etc/nginx/sites-enabled/https_{{ casebox_core }}.conf' }
 
     # Solr
-    - solr_url: 'http://www-eu.apache.org/dist/lucene/solr/6.0.0/solr-6.0.0.tgz'
-    - solr_ver: 'solr-6.0.0'
+    - solr_url: 'http://www-eu.apache.org/dist/lucene/solr/6.0.1/solr-6.0.1.tgz'
+    - solr_ver: 'solr-6.0.1'
 
   #
   # Tasks
