@@ -146,12 +146,11 @@
       shell: "wget -O- https://www.rabbitmq.com/rabbitmq-signing-key-public.asc | sudo apt-key add -"
       become: yes
 
-    - name: "RABBITMQ | APT update."
-      shell: 'apt-get update --fix-missing'
-      become: yes
-
     - name: "RABBITMQ | APT install rabbitmq packages."
-      apt: pkg='rabbitmq-server' state=present
+      apt: pkg='rabbitmq-server'
+           update_cache=yes
+           force=yes
+           state=present
       become: yes
 
     # PHP
