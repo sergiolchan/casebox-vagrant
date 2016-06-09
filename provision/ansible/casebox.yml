@@ -378,6 +378,14 @@
       tags:
         - install
 
+    - name: "CASEBOX | Grant SUPER permissions."
+      shell: "mysql --user=root --password={{ mysq_root_password.stdout }} -e \"UPDATE mysql.user SET Super_Priv='Y' WHERE user='{{ casebox_db_user }}' AND host='{{ item }}';FLUSH PRIVILEGES;\""
+      with_items:
+        - "{{ casebox_db_hosts }}"
+      when: config_file_exist.stat.exists == False
+      tags:
+        - install
+
     - name: "CASEBOX | Import Casebox databases."
       mysql_db: name={{ item.db }}
                 login_user=root

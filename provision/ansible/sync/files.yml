@@ -1,0 +1,34 @@
+#
+# File: files.yml
+# Description: Synchronise files
+#
+---
+
+- hosts: "*"
+
+  #
+  # Vars
+  #
+  vars:
+    - ssh_user: "{{ ssh_user }}"
+    - ssh_host: "{{ ssh_host }}"
+    - ssh_port: "{{ ssh_port }}"
+    - source: "{{ source }}"
+    - destination: "{{ destination }}"
+    - ssh_options: "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p {{ ssh_port }}"
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: 'RSYNC | Synchronize remote files.'
+      shell: " rsync -ahvz -e '{{ ssh_options }}' {{ ssh_user }}@{{ ssh_host }}:{{ source }} {{ destination }}"
+      ignore_errors: yes
+      tags:
+        - remote
+
+    - name: 'RSYNC | Synchronize local files.'
+      shell: " rsync -ahvz -e '{{ ssh_options }}' {{ source }} {{ ssh_user }}@{{ ssh_host }}:{{ destination }}"
+      ignore_errors: yes
+      tags:
+        - localrm

@@ -1,0 +1,32 @@
+#
+# File: database.yml
+# Description: Database backup restore
+#
+---
+
+- hosts: "*"
+
+  #
+  # Vars
+  #
+  vars:
+    - db_host: "{{ db_host }}"
+    - db_port: "{{ db_port }}"
+    - db_user: "{{ db_user }}"
+    - db_pass: "{{ db_pass }}"
+    - db_name: "{{ db_name }}"
+    - file: "{{ file }}"
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: 'DATABASE | Backup.'
+      shell: " mysqldump --user={{ db_user }} --password={{ db_pass }} --host={{ db_host }} --port={{ db_port }} {{ db_name }} > {{ file }}"
+      tags:
+        - backup
+
+    - name: 'DATABASE | Restore.'
+      shell: " mysql --user={{ db_user }} --password={{ db_pass }} --host={{ db_host }} --port={{ db_port }} {{ db_name }} < {{ file }}"
+      tags:
+        - restore
