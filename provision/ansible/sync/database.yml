@@ -10,23 +10,68 @@
   # Vars
   #
   vars:
-    - db_host: "{{ db_host }}"
-    - db_port: "{{ db_port }}"
-    - db_user: "{{ db_user }}"
-    - db_pass: "{{ db_pass }}"
-    - db_name: "{{ db_name }}"
-    - file: "{{ file }}"
+    - docroot: "{{ docroot }}"
+    - parameters_file: "{{ parameters_file }}"
+    - sql_file: "{{ dump_file }}"
+    - script: '/var/provision/python/var.py'
 
   #
   # Tasks
   #
   tasks:
-    - name: 'DATABASE | Backup.'
-      shell: " mysqldump --user={{ db_user }} --password={{ db_pass }} --host={{ db_host }} --port={{ db_port }} {{ db_name }} > {{ file }}"
+    - name: 'parameters | fetch db_host.'
+      shell: "python {{ script }} --file={{ parameters_file }} --var=[parameters][db_host]"
+      register: db_host
+      tags:
+        - backup
+        - restore
+
+    - name: 'parameters | fetch db_port.'
+      shell: "python {{ script }} --file={{ parameters_file }} --var=[parameters][db_port]"
+      register: db_port
+      tags:
+        - backup
+        - restore
+
+    - name: 'parameters | fetch db_user.'
+      shell: "python {{ script }} --file={{ parameters_file }} --var=[parameters][db_user]"
+      register: db_user
+      tags:
+        - backup
+        - restore
+
+    - name: 'parameters | fetch db_pass.'
+      shell: "python {{ script }} --file={{ parameters_file }} --var=[parameters][db_pass]"
+      register: db_pass
+      tags:
+        - backup
+        - restore
+
+    - name: 'parameters | fetch db_name.'
+      shell: "python {{ script }} --file={{ parameters_file }} --var=[parameters][db_name]"
+      register: db_name
+      tags:
+        - backup
+        - restore
+
+    - name: 'parameters | fetch core_name.'
+      shell: "python {{ script }} --file={{ parameters_file }} --var=[parameters][core_name]"
+      register: core_name
+      tags:
+        - backup
+        - restore
+
+    - name: 'database | backup.'
+      shell: " mysqldump --user={{ db_user.stdout }} --password={{ db_pass.stdout }} --host={{ db_host.stdout }} --port={{ db_port.stdout }} {{ db_name.stdout }} > {{ sql_file }}"
       tags:
         - backup
 
-    - name: 'DATABASE | Restore.'
-      shell: " mysql --user={{ db_user }} --password={{ db_pass }} --host={{ db_host }} --port={{ db_port }} {{ db_name }} < {{ file }}"
+    - name: 'database | restore.'
+      shell: " mysql --user={{ db_user.stdout }} --password={{ db_pass.stdout }} --host={{ db_host.stdout }} --port={{ db_port.stdout }} {{ db_name.stdout }} < {{ sql_file }}"
+      tags:
+        - restore
+
+    - name: 'casebox | update solr core.'
+      shell: "php {{ docroot }}/bin/console casebox:solr:update --all=true --env={{ core_name.stdout }}"
       tags:
         - restore
