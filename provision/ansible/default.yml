@@ -24,6 +24,7 @@
         - 'openssl'
         - 'software-properties-common'
         - 'ecryptfs-utils'
+        - 'dstat'
 
     # Locale
     - locales:

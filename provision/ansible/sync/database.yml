@@ -66,6 +66,11 @@
       tags:
         - backup
 
+    - name: 'shell | clean definer.'
+      shell: " sed -i 's/DEFINER=[^*]*\*/\*/g' {{ sql_file }}"
+      tags:
+        - backup
+
     - name: 'database | restore.'
       shell: " mysql --user={{ db_user.stdout }} --password={{ db_pass.stdout }} --host={{ db_host.stdout }} --port={{ db_port.stdout }} {{ db_name.stdout }} < {{ sql_file }}"
       tags:
