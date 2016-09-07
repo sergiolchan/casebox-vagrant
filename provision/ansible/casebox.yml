@@ -64,12 +64,6 @@
   # Tasks
   #
   tasks:
-    - debug: var=admin_email
-
-    - debug: var=sender_email
-
-    - debug: var=root_password
-
       # Solr
     - name: "SOLR | Check Apache Solr status."
       stat: path='/etc/init.d/solr'
@@ -579,6 +573,11 @@
 
     - name: "CASEBOX | Add Casebox assests."
       shell: "php {{ casebox_root_dir }}bin/console casebox:min:assets --env={{ casebox_core }}"
+      tags:
+        - install
+
+    - name: "CASEBOX | Update root password."
+      shell: "php {{ casebox_root_dir }}bin/console casebox:user:password:update root {{ root_password }} --env={{ casebox_core }}"
       tags:
         - install
 
