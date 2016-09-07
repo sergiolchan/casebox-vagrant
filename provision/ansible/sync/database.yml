@@ -14,6 +14,7 @@
     - parameters_file: "{{ parameters_file }}"
     - sql_file: "{{ dump_file }}"
     - script: '/var/provision/python/var.py'
+    - definer: sed -i 's/DEFINER=[^*]*\*/\*/g'
 
   #
   # Tasks
@@ -67,7 +68,7 @@
         - backup
 
     - name: 'shell | clean definer.'
-      shell: " sed -i 's/DEFINER=[^*]*\*/\*/g' {{ sql_file }}"
+      shell: "{{ definer }} {{ sql_file }}"
       tags:
         - backup
 

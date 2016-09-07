@@ -64,6 +64,12 @@
   # Tasks
   #
   tasks:
+    - debug: var=admin_email
+
+    - debug: var=sender_email
+
+    - debug: var=root_password
+
       # Solr
     - name: "SOLR | Check Apache Solr status."
       stat: path='/etc/init.d/solr'
@@ -502,8 +508,8 @@
         - "    solr_username: {{ casebox_solr_username }}"
         - "    solr_password: {{ casebox_solr_password }}"
         - '    session.lifetime: 4320'
-        - '    admin_email: admin@example.com'
-        - '    sender_email: emails.sender@example.com'
+        - "    admin_email: {{ admin_email }}"
+        - "    sender_email: {{ sender_email }}"
         - '    comments_pass:'
         - '    mailer_transport: smtp'
         - '    mailer_host: 127.0.0.1'
