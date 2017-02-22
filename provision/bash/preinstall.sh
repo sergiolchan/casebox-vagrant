@@ -10,5 +10,11 @@ pip install markupsafe;
 echo -e "\n[*] Install ansible.\n"
 pip install ansible;
 echo -e "\n[*] Autoremove unused software .\n"
+echo -e "Downloading and Installing Java 8"
+mkdir /opt/javainstaller
+wget http://interact.com.mx/java/jdk-8u121-linux-i586.tar.gz -P /opt/javainstaller/
+wget http://interact.com.mx/java/ujavainstaller.sh -P /opt/javainstaller/
+chmod +x /opt/javainstaller/ujavainstaller.sh
+/opt/javainstaller/ujavainstaller.sh /opt/javainstaller/jdk-8u121-linux-i586.tar.gz
 apt-get autoremove -y;
 echo -e "\n[x] Done.\n"
