@@ -28,17 +28,18 @@
 
     # Locale
     - locales:
-        - 'export LANGUAGE=en_US.UTF-8'
-        - 'export LANG=en_US.UTF-8'
-        - 'export LC_ALL=en_US.UTF-8'
-        - 'locale-gen en_US.UTF-8'
+        - 'export LANGUAGE=es_MX.UTF-8'
+        - 'export LANG=es_MX.UTF-8'
+        - 'export LC_ALL=es_MX.UTF-8'
+        - 'locale-gen es_MX.UTF-8'
         - 'dpkg-reconfigure locales'
 
     # JAVA
-    - java_packages:
-        - 'oracle-java8-installer'
-        - 'ca-certificates'
-        - 'oracle-java8-set-default'
+    # Installed on preinstall.sh
+    #- java_packages:
+    #    - 'oracle-java8-installer'
+    #    - 'ca-certificates'
+    #    - 'oracle-java8-set-default'
 
     # PHP
     - php_packages:
@@ -209,21 +210,22 @@
       become: yes
 
     # Java
-    - name: "JAVA | Add Oracle Java Repository."
-      apt_repository: repo='ppa:webupd8team/java'
-      become: yes
+    # Installed on preinstall.sh
+    #- name: "JAVA | Add Oracle Java Repository."
+    #  apt_repository: repo='ppa:webupd8team/java'
+    #  become: yes
 
-    - name: "JAVA | Accept Java 8 License."
-      debconf: name='oracle-java8-installer'
-               question='shared/accepted-oracle-license-v1-1'
-               value='true'
-               vtype='select'
-      become: yes
+    #- name: "JAVA | Accept Java 8 License."
+    #  debconf: name='oracle-java8-installer'
+    #           question='shared/accepted-oracle-license-v1-1'
+    #           value='true'
+    #           vtype='select'
+    #  become: yes
 
-    - name: "JAVA | Install Oracle Java 8."
-      apt: name={{item}} state=latest
-      with_items: "{{ java_packages }}"
-      become: yes
+    #- name: "JAVA | Install Oracle Java 8."
+    #  apt: name={{item}} state=latest
+    #  with_items: "{{ java_packages }}"
+    #  become: yes
 
     # LibreOffice and Unoconv
     - name: "LIBREOFFICE | Install LibreOffice."
