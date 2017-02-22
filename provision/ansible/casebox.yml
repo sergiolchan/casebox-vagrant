@@ -488,7 +488,7 @@
         - '# This file is auto-generated during the composer install'
         - 'parameters:'
         - "    core_name: {{ casebox_core }}"
-        - '    locale: en'
+        - '    locale: es'
         - '    server_name: http://192.168.33.3.xip.io/'
         - '    db_host: 127.0.0.1'
         - '    db_port: 3306'
