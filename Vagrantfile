@@ -9,8 +9,8 @@ Vagrant.configure(2) do |config|
     config.ssh.forward_agent = true
 
     config.vm.provider 'virtualbox' do |vb|
-        vb.name = 'casebox'
-        vb.memory = '2048'
+        vb.name = 'casebox_sergio'
+        vb.memory = '3072'
         vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
         vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
     end
